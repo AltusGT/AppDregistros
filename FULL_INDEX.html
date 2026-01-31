@@ -845,9 +845,6 @@
             const start = document.getElementById('dash-start').value;
             const end = document.getElementById('dash-end').value;
 
-            // TRACER BULLET 1
-            alert(`DETECTADO: Iniciando filtro para estudiante: "${student}"`);
-
             if (!student) {
                 // If no student selected, clear chart silently
                 chartInstance.data.labels = [];
@@ -874,10 +871,6 @@
         }
 
         function renderDashboardData(data) {
-            // TRACER BULLET 2
-            // remove tracer alert if you want, or keep it for now. I'll keep it simple.
-            // alert(`RECIBIDO: ${data.records ? data.records.length : 0} registros.`); 
-
             Swal.close();
 
             // Check for server-side error caught by try-catch
