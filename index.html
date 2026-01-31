@@ -59,6 +59,7 @@
 
         body {
             font-family: 'Open Sans', sans-serif;
+            font-size: 0.9rem;
             background-color: #f8fafc;
             color: #1e293b;
         }
@@ -71,7 +72,24 @@
         .text-3xl,
         #view-title {
             font-family: 'Oswald', sans-serif;
-            letter-spacing: 0.025em;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        h1,
+        #view-title {
+            font-size: 2.25rem !important;
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: 1.75rem !important;
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 1.4rem !important;
+            font-weight: 600;
         }
 
         .glass-effect {
@@ -928,7 +946,7 @@
                 data: {
                     labels: [],
                     datasets: [
-                        { label: 'UAC', data: [], borderColor: '#385da9', backgroundColor: 'rgba(56, 93, 169, 0.1)', tension: 0.4, fill: true, pointRadius: 5 },
+                        { label: 'UAC', data: [], borderColor: '#385da9', backgroundColor: 'rgba(56, 93, 169, 0.1)', tension: 0.4, fill: false, pointRadius: 5 },
                         { label: 'UAI', data: [], borderColor: '#e5442a', backgroundColor: 'transparent', tension: 0.4, borderDash: [5, 5], pointRadius: 3 }
                     ]
                 },
