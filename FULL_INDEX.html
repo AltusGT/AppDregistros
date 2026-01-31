@@ -6,15 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ALTUS | Sistema de Registros</title>
     <base target="_top">
-    
+
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    
+
     <!-- CSS Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -120,11 +121,11 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        input:checked ~ .toggle-bg {
+        input:checked~.toggle-bg {
             background-color: var(--primary);
         }
 
-        input:checked ~ .toggle-dot {
+        input:checked~.toggle-dot {
             transform: translateX(100%);
         }
 
@@ -163,12 +164,13 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         .card-hover:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1);
@@ -177,11 +179,13 @@
 </head>
 
 <body class="bg-corp-bg min-h-screen flex overflow-hidden">
-    
+
     <!-- Sidebar -->
     <aside class="w-72 glass-effect h-screen sticky top-0 z-50 flex flex-col items-center py-8 px-6 border-r shadow-sm">
         <div class="flex items-center space-x-3 mb-12">
-            <div class="w-12 h-12 bg-corp-primary rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg">A</div>
+            <div
+                class="w-12 h-12 bg-corp-primary rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg">
+                A</div>
             <div>
                 <h1 class="text-2xl font-bold text-corp-primary tracking-tight">ALTUS</h1>
                 <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Data Management</p>
@@ -189,15 +193,23 @@
         </div>
 
         <nav class="w-full space-y-3 flex-1">
-            <button id="nav-registros" onclick="switchView('registros')" class="sidebar-link active w-full flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all group">
-                <svg class="w-5 h-5 group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            <button id="nav-registros" onclick="switchView('registros')"
+                class="sidebar-link active w-full flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all group">
+                <svg class="w-5 h-5 group-hover:scale-110 transition" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                    </path>
                 </svg>
                 <span class="font-semibold">Registros</span>
             </button>
-            <button id="nav-dashboard" onclick="switchView('dashboard')" class="sidebar-link w-full flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all group">
-                <svg class="w-5 h-5 group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            <button id="nav-dashboard" onclick="switchView('dashboard')"
+                class="sidebar-link w-full flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all group">
+                <svg class="w-5 h-5 group-hover:scale-110 transition" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
                 </svg>
                 <span class="font-semibold">Supervisión</span>
             </button>
@@ -206,9 +218,11 @@
         <!-- User Profile -->
         <div class="mt-auto w-full pt-8 border-t">
             <div class="bg-white/50 p-4 rounded-3xl flex items-center space-x-3 border shadow-sm">
-                <div class="w-10 h-10 rounded-full bg-corp-primary/10 flex items-center justify-center text-corp-primary">
+                <div
+                    class="w-10 h-10 rounded-full bg-corp-primary/10 flex items-center justify-center text-corp-primary">
                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                            clip-rule="evenodd"></path>
                     </svg>
                 </div>
                 <div class="overflow-hidden">
@@ -221,19 +235,21 @@
 
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto px-8 py-8 h-screen">
-        
+
         <!-- Top Bar -->
         <header class="flex justify-between items-center mb-10">
             <div>
                 <h2 id="view-title" class="text-3xl font-extrabold text-corp-text">Registros de Sesión</h2>
                 <p id="view-subtitle" class="text-gray-500 font-medium mt-1">Gestión académica y terapéutica</p>
             </div>
-            
+
             <div class="flex items-center space-x-4">
                 <div class="bg-white px-5 py-2.5 rounded-2xl shadow-premium flex items-center space-x-3 border">
-                    <span id="current-date-display" class="font-bold text-corp-primary text-sm uppercase">31 de Enero, 2026</span>
+                    <span id="current-date-display" class="font-bold text-corp-primary text-sm uppercase">31 de Enero,
+                        2026</span>
                     <div class="w-px h-4 bg-gray-200"></div>
-                    <button id="btn-test-conn" class="text-xs font-bold text-gray-400 hover:text-corp-primary transition">
+                    <button id="btn-test-conn"
+                        class="text-xs font-bold text-gray-400 hover:text-corp-primary transition">
                         Sincronizar <i class="fas fa-sync-alt ml-1"></i>
                     </button>
                 </div>
@@ -242,20 +258,23 @@
 
         <!-- VIEW: REGISTROS -->
         <section id="view-registros" class="page-transition space-y-8 pb-12">
-            
+
             <!-- Context Header -->
-            <div class="glass-effect rounded-4xl p-8 shadow-premium flex flex-col md:flex-row justify-between items-center gap-6">
+            <div
+                class="glass-effect rounded-4xl p-8 shadow-premium flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="flex items-center space-x-6">
                     <div class="flex items-center bg-gray-100 p-1.5 rounded-2xl">
                         <span class="px-5 py-2.5 text-xs font-bold text-gray-500 uppercase">Educativo</span>
                         <label class="relative inline-flex items-center cursor-pointer mx-2">
                             <input type="checkbox" id="type-toggle" class="sr-only peer">
-                            <div class="w-14 h-8 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all toggle-bg peer-checked:bg-corp-primary"></div>
+                            <div
+                                class="w-14 h-8 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all toggle-bg peer-checked:bg-corp-primary">
+                            </div>
                         </label>
                         <span class="px-5 py-2.5 text-xs font-bold text-corp-primary uppercase">Terapéutico</span>
                     </div>
                 </div>
-                
+
                 <div class="flex-1 max-w-xs w-full">
                     <label class="text-[10px] font-bold text-gray-400 uppercase ml-2 mb-1 block">Fecha de Sesión</label>
                     <input type="date" id="fecha-sesion" class="input-premium w-full font-semibold text-gray-700">
@@ -275,7 +294,8 @@
                         <div class="grid grid-cols-1 gap-6">
                             <div>
                                 <label class="text-sm font-bold text-gray-500 mb-2 block">Seleccione Estudiante</label>
-                                <select id="estudiante" class="input-premium w-full py-4 text-lg font-semibold cursor-pointer">
+                                <select id="estudiante"
+                                    class="input-premium w-full py-4 text-lg font-semibold cursor-pointer">
                                     <option value="">Buscar estudiante...</option>
                                     <!-- Dynamic -->
                                 </select>
@@ -283,7 +303,8 @@
                         </div>
 
                         <!-- Row 2: Dynamic Fields -->
-                        <div id="educational-fields" class="grid grid-cols-1 md:grid-cols-3 gap-6 animate__animated animate__fadeIn">
+                        <div id="educational-fields"
+                            class="grid grid-cols-1 md:grid-cols-3 gap-6 animate__animated animate__fadeIn">
                             <div>
                                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Grado</label>
                                 <select id="grado" class="input-premium w-full text-sm font-bold">
@@ -315,14 +336,17 @@
                             </div>
                             <div>
                                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">OCP</label>
-                                <select id="ocp" class="input-premium w-full text-sm font-bold border-dashed opacity-50 transition-all" disabled>
+                                <select id="ocp"
+                                    class="input-premium w-full text-sm font-bold border-dashed opacity-50 transition-all"
+                                    disabled>
                                     <option value="">Primero seleccione grado/materia</option>
                                 </select>
                             </div>
                         </div>
 
                         <div id="therapeutic-fields" class="hidden animate__animated animate__fadeIn">
-                            <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Programa Terapéutico</label>
+                            <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Programa
+                                Terapéutico</label>
                             <select id="programa-terapeutico" class="input-premium w-full text-sm font-bold">
                                 <option value="">Seleccione programa...</option>
                                 <!-- Dynamic -->
@@ -332,15 +356,22 @@
                         <!-- Row 3: Actionable Data -->
                         <div class="bg-gray-50 rounded-3xl p-6 grid grid-cols-2 md:grid-cols-4 gap-4 border">
                             <div class="col-span-1">
-                                <label class="text-[10px] font-black text-corp-primary uppercase mb-1.5 block">UAC (Aciertos)</label>
-                                <input type="number" id="uac" class="input-premium w-full py-4 text-center text-2xl font-black text-corp-primary" placeholder="0">
+                                <label class="text-[10px] font-black text-corp-primary uppercase mb-1.5 block">UAC
+                                    (Aciertos)</label>
+                                <input type="number" id="uac"
+                                    class="input-premium w-full py-4 text-center text-2xl font-black text-corp-primary"
+                                    placeholder="0">
                             </div>
                             <div class="col-span-1">
-                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">UAI (Intentos)</label>
-                                <input type="number" id="uai" class="input-premium w-full py-4 text-center text-2xl font-black text-gray-400" placeholder="0">
+                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">UAI
+                                    (Intentos)</label>
+                                <input type="number" id="uai"
+                                    class="input-premium w-full py-4 text-center text-2xl font-black text-gray-400"
+                                    placeholder="0">
                             </div>
                             <div class="col-span-2">
-                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Nivel de Ayuda</label>
+                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Nivel de
+                                    Ayuda</label>
                                 <select id="nivel-ayuda" class="input-premium w-full text-xs font-bold py-4">
                                     <option>Ninguna</option>
                                     <option>Gestual</option>
@@ -351,7 +382,8 @@
                                 </select>
                             </div>
                             <div class="col-span-2">
-                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Reforzador</label>
+                                <label
+                                    class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Reforzador</label>
                                 <select id="reforzador" class="input-premium w-full text-xs font-bold">
                                     <option>Ninguno</option>
                                     <option>Social</option>
@@ -363,7 +395,8 @@
                                 </select>
                             </div>
                             <div class="col-span-2">
-                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Prog. Reforzamiento</label>
+                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Prog.
+                                    Reforzamiento</label>
                                 <select id="prog-ref" class="input-premium w-full text-xs font-bold">
                                     <option>RF</option>
                                     <option>RV</option>
@@ -374,8 +407,12 @@
                         </div>
 
                         <div class="flex justify-end pt-4">
-                            <button type="button" id="btn-add-temp" class="btn-premium-secondary px-10 py-4 rounded-2xl font-bold flex items-center space-x-3 shadow-lg">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            <button type="button" id="btn-add-temp"
+                                class="btn-premium-secondary px-10 py-4 rounded-2xl font-bold flex items-center space-x-3 shadow-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
                                 <span>Añadir Registro</span>
                             </button>
                         </div>
@@ -389,12 +426,18 @@
                             <div class="w-1.5 h-8 bg-corp-secondary rounded-full"></div>
                             <h3 class="text-xl font-bold">Sesión Actual</h3>
                         </div>
-                        <span id="session-count" class="bg-gray-100 text-gray-500 text-xs font-black px-3 py-1.5 rounded-xl">0</span>
+                        <span id="session-count"
+                            class="bg-gray-100 text-gray-500 text-xs font-black px-3 py-1.5 rounded-xl">0</span>
                     </div>
 
-                    <div id="temp-table-empty" class="flex-1 flex flex-col items-center justify-center text-center opacity-40 py-12">
+                    <div id="temp-table-empty"
+                        class="flex-1 flex flex-col items-center justify-center text-center opacity-40 py-12">
                         <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
                         </div>
                         <p class="text-sm font-semibold max-w-[180px]">No hay registros en esta sesión todavía.</p>
                     </div>
@@ -406,10 +449,12 @@
                     </div>
 
                     <div id="save-session-area" class="hidden pt-6 border-t animate__animated animate__fadeInUp">
-                        <button id="btn-save-session" class="btn-premium-primary w-full py-5 rounded-2xl font-black text-lg shadow-lg">
+                        <button id="btn-save-session"
+                            class="btn-premium-primary w-full py-5 rounded-2xl font-black text-lg shadow-lg">
                             Finalizar y Guardar Sesión
                         </button>
-                        <p class="text-[10px] text-center text-gray-400 mt-3 font-bold uppercase tracking-widest">Sincronización con Supabase BD</p>
+                        <p class="text-[10px] text-center text-gray-400 mt-3 font-bold uppercase tracking-widest">
+                            Sincronización con Supabase BD</p>
                     </div>
                 </div>
             </div>
@@ -417,18 +462,26 @@
 
         <!-- VIEW: DASHBOARD -->
         <section id="view-dashboard" class="hidden page-transition space-y-8 pb-12">
-            
+
             <div id="pin-screen" class="max-w-md mx-auto mt-20 text-center animate__animated animate__zoomIn">
                 <div class="bg-white rounded-4xl p-12 shadow-hover border">
-                    <div class="w-20 h-20 bg-corp-primary/10 rounded-3xl flex items-center justify-center text-corp-primary mx-auto mb-8">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    <div
+                        class="w-20 h-20 bg-corp-primary/10 rounded-3xl flex items-center justify-center text-corp-primary mx-auto mb-8">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                            </path>
+                        </svg>
                     </div>
                     <h2 class="text-2xl font-bold mb-2">Acceso Supervisión</h2>
                     <p class="text-gray-500 mb-8 font-medium">Ingrese su PIN de seguridad</p>
-                    
-                    <input type="password" id="pin-input" class="bg-gray-100 border-none rounded-2xl text-3xl text-center py-5 w-full mb-6 tracking-[2rem] font-black focus:ring-4 focus:ring-corp-primary/10 transition-all outline-none" maxlength="4" placeholder="••••">
-                    
-                    <button id="btn-verify-pin" class="btn-premium-primary w-full py-4 rounded-2xl font-bold">Verificar Acceso</button>
+
+                    <input type="password" id="pin-input"
+                        class="bg-gray-100 border-none rounded-2xl text-3xl text-center py-5 w-full mb-6 tracking-[2rem] font-black focus:ring-4 focus:ring-corp-primary/10 transition-all outline-none"
+                        maxlength="4" placeholder="••••">
+
+                    <button id="btn-verify-pin" class="btn-premium-primary w-full py-4 rounded-2xl font-bold">Verificar
+                        Acceso</button>
                 </div>
             </div>
 
@@ -440,18 +493,21 @@
                         <select id="dash-student" class="input-premium w-full text-sm font-bold"></select>
                     </div>
                     <div class="flex-1 min-w-[200px]">
-                        <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block">Programa / Materia</label>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block">Programa /
+                            Materia</label>
                         <select id="dash-program" class="input-premium w-full text-sm font-bold"></select>
                     </div>
                     <div class="w-40">
-                        <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block">Rango Desde</label>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block">Rango
+                            Desde</label>
                         <input type="date" id="dash-start" class="input-premium w-full text-xs font-bold">
                     </div>
                     <div class="w-40">
                         <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block">Hasta</label>
                         <input type="date" id="dash-end" class="input-premium w-full text-xs font-bold">
                     </div>
-                    <button id="btn-update-dash" class="btn-premium-primary px-8 py-3.5 rounded-2xl font-bold shadow-lg">Analizar</button>
+                    <button id="btn-update-dash"
+                        class="btn-premium-primary px-8 py-3.5 rounded-2xl font-bold shadow-lg">Analizar</button>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -479,20 +535,27 @@
                     </div>
 
                     <!-- Insight/Recs Card -->
-                    <div class="lg:col-span-4 bg-white rounded-4xl p-8 shadow-premium border border-gray-100 flex flex-col">
+                    <div
+                        class="lg:col-span-4 bg-white rounded-4xl p-8 shadow-premium border border-gray-100 flex flex-col">
                         <div class="flex items-center space-x-3 mb-8">
                             <div class="w-1.5 h-8 bg-corp-secondary rounded-full"></div>
                             <h3 class="text-xl font-bold text-gray-800">Recomendaciones</h3>
                         </div>
 
                         <div class="space-y-6 flex-1">
-                            <input type="text" id="supervisor-name" class="input-premium w-full text-sm font-bold" placeholder="Tu nombre...">
-                            <textarea id="recommendation-text" class="input-premium w-full text-sm font-medium resize-none h-32" placeholder="Escribe aquí notas de supervisión..."></textarea>
-                            <button id="btn-save-rec" class="btn-premium-secondary w-full py-4 rounded-2xl font-bold shadow-lg">Publicar Nota</button>
+                            <input type="text" id="supervisor-name" class="input-premium w-full text-sm font-bold"
+                                placeholder="Tu nombre...">
+                            <textarea id="recommendation-text"
+                                class="input-premium w-full text-sm font-medium resize-none h-32"
+                                placeholder="Escribe aquí notas de supervisión..."></textarea>
+                            <button id="btn-save-rec"
+                                class="btn-premium-secondary w-full py-4 rounded-2xl font-bold shadow-lg">Publicar
+                                Nota</button>
                         </div>
 
                         <div class="mt-8 pt-8 border-t flex-1">
-                            <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4">Últimas Intervenciones</p>
+                            <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4">Últimas
+                                Intervenciones</p>
                             <ul id="rec-list" class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
                                 <!-- List items -->
                                 <div class="py-12 flex justify-center items-center text-gray-300">
@@ -528,7 +591,7 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('fecha-sesion').value = today;
             sessionId = 'SES-' + Date.now();
-            
+
             updateDateDisplay();
             loadInitialData();
             setupListeners();
@@ -544,14 +607,14 @@
             try {
                 const { data: students, error: errS } = await _supabase.from('estudiantes').select('nombre');
                 const { data: edu, error: errE } = await _supabase.from('base_educativa').select('*');
-                const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('nombre');
+                const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('Programa');
 
                 if (errS || errE || errT) throw (errS || errE || errT);
 
                 populateFields({
                     students: students.map(s => s.nombre),
                     educational: edu,
-                    therapeutic: thermo.map(t => t.nombre)
+                    therapeutic: thermo.map(t => t.Programa)
                 });
             } catch (err) {
                 Swal.fire({ icon: 'error', title: 'Error de Sincronización', text: err.message, background: '#fff', borderRadius: '1.5rem' });
@@ -587,7 +650,7 @@
                 const isTherapeutic = e.target.checked;
                 const eduFields = document.getElementById('educational-fields');
                 const therFields = document.getElementById('therapeutic-fields');
-                
+
                 if (isTherapeutic) {
                     eduFields.classList.add('hidden');
                     therFields.classList.remove('hidden');
@@ -672,11 +735,11 @@
 
             currentSession.push(record);
             renderTempTable();
-            
+
             // Clean inputs for next
             document.getElementById('uac').value = '';
             document.getElementById('uai').value = '';
-            
+
             // Animation feedback
             const btn = document.getElementById('btn-add-temp');
             btn.innerHTML = '<span>¡Agregado!</span>';
@@ -709,7 +772,7 @@
             currentSession.forEach((r, idx) => {
                 const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const detail = r.tipoRegistro === 'Educativo' ? `${r.materia} · ${r.ocp}` : r.materia;
-                
+
                 const item = `
                     <div class="bg-gray-50 border rounded-2xl p-4 flex items-center justify-between group animate__animated animate__fadeInRight">
                         <div class="flex-1 overflow-hidden">
@@ -784,10 +847,10 @@
 
             document.getElementById('view-' + view).classList.remove('hidden');
             document.getElementById('nav-' + view).classList.add('active');
-            
+
             const title = document.getElementById('view-title');
             const subtitle = document.getElementById('view-subtitle');
-            
+
             if (view === 'registros') {
                 title.textContent = 'Registros de Sesión';
                 subtitle.textContent = 'Gestión académica y terapéutica';
@@ -812,7 +875,7 @@
         function initChart() {
             const ctx = document.getElementById('evolutionChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-            
+
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -856,7 +919,7 @@
                 chartInstance.data.datasets[0].data = data.map(r => r.uac);
                 chartInstance.data.datasets[1].data = data.map(r => r.uai);
                 chartInstance.update();
-                
+
                 loadRecommendations(student);
             } catch (err) {
                 console.error(err);
@@ -866,17 +929,17 @@
         async function loadRecommendations(student) {
             const list = document.getElementById('rec-list');
             list.innerHTML = '<div class="flex justify-center py-4"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-corp-primary"></div></div>';
-            
+
             try {
                 const { data, error } = await _supabase.from('recomendaciones').select('*').eq('estudiante', student).order('created_at', { ascending: false });
                 if (error) throw error;
-                
+
                 list.innerHTML = '';
                 if (data.length === 0) {
                     list.innerHTML = '<p class="text-xs text-center text-gray-400 py-8">Sin notas para este estudiante.</p>';
                     return;
                 }
-                
+
                 data.forEach(r => {
                     const li = document.createElement('li');
                     li.className = 'bg-gray-50 p-4 rounded-2xl border-l-4 border-corp-primary shadow-sm';
@@ -917,4 +980,5 @@
         }
     </script>
 </body>
+
 </html>

@@ -607,14 +607,14 @@
             try {
                 const { data: students, error: errS } = await _supabase.from('estudiantes').select('nombre');
                 const { data: edu, error: errE } = await _supabase.from('base_educativa').select('*');
-                const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('nombre');
+                const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('Programa');
 
                 if (errS || errE || errT) throw (errS || errE || errT);
 
                 populateFields({
                     students: students.map(s => s.nombre),
                     educational: edu,
-                    therapeutic: thermo.map(t => t.nombre)
+                    therapeutic: thermo.map(t => t.Programa)
                 });
             } catch (err) {
                 Swal.fire({ icon: 'error', title: 'Error de Sincronización', text: err.message, background: '#fff', borderRadius: '1.5rem' });
