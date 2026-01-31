@@ -141,35 +141,47 @@ function getDashboardData(studentName, startDateStr, endDateStr, program) {
         if (rowProgram !== targetProgram) return false;
       }
       
-      // Date Filtering (C is Fecha_Sesion index 2)
+      // Date Filtering using String Comparison (YYYYMMDD) to avoid TimeZone hell
+      // Row val could be Date object or String
       let rowDate = row[2];
-      if (typeof rowDate === 'string') {
-        rowDate = new Date(rowDate);
-      } 
-      if (!(rowDate instanceof Date) || isNaN(rowDate)) return false; 
+      let rowDateStr = "";
+      
+      if (rowDate instanceof Date) {
+        rowDateStr = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "yyyyMMdd");
+      } else if (typeof rowDate === 'string') {
+         // Assuming format could be roughly parsed or user saves as YYYY-MM-DD
+         // Try to parse to date first to standardize
+         let d = new Date(rowDate);
+         if (!isNaN(d.getTime())) {
+           rowDateStr = Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyyMMdd");
+         } else {
+           // Fallback for raw strings if they match YYYY-MM-DD
+           rowDateStr = rowDate.replace(/[^0-9]/g, "").substring(0,8);
+         }
+      }
 
-      rowDate.setHours(0,0,0,0);
+      if (!rowDateStr || rowDateStr.length !== 8) return false;
 
       if (startDateStr) {
-         const start = new Date(startDateStr);
-         start.setHours(0,0,0,0); 
-         if (rowDate.getTime() < start.getTime()) return false;
+         // Input is YYYY-MM-DD
+         const startStr = startDateStr.replace(/-/g, "");
+         if (rowDateStr < startStr) return false;
       }
 
       if (endDateStr) {
-         const end = new Date(endDateStr);
-         end.setHours(0,0,0,0);
-         if (rowDate.getTime() > end.getTime()) return false;
+         const endStr = endDateStr.replace(/-/g, "");
+         if (rowDateStr > endStr) return false;
       }
       
       return true;
     });
     
-    // Sort by Date (oldest first)
+    // Sort by Date (oldest first) using strings
     filtered.sort((a, b) => {
-      const dA = new Date(a[2]);
-      const dB = new Date(b[2]);
-      return dA - dB;
+       // ... same sort logic but carefully ...
+       const dA = new Date(a[2]); 
+       const dB = new Date(b[2]);
+       return dA - dB;
     });
 
     const recommendations = recSheet ? recSheet.getDataRange().getValues().slice(1)
