@@ -147,11 +147,32 @@
             background: #94a3b8;
         }
 
-        /* Charts & Containers */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
+        /* Hide Number Spinners */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* Selectable Cards */
+        .selectable-card {
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            background: white;
+        }
+
+        .selectable-card.selected {
+            border-color: var(--primary);
+            background-color: rgba(56, 93, 169, 0.05);
+            color: var(--primary) !important;
+            box-shadow: 0 4px 12px rgba(56, 93, 169, 0.1);
         }
 
         /* Animations */
@@ -395,14 +416,19 @@
                                 </select>
                             </div>
                             <div class="col-span-2">
-                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Prog.
+                                <label class="text-[10px] font-black text-gray-400 uppercase mb-2.5 block">Prog.
                                     Reforzamiento</label>
-                                <select id="prog-ref" class="input-premium w-full text-xs font-bold">
-                                    <option>RF</option>
-                                    <option>RV</option>
-                                    <option>IF</option>
-                                    <option>IV</option>
-                                </select>
+                                <div id="prog-ref-grid" class="grid grid-cols-4 gap-2">
+                                    <button type="button" data-value="RF"
+                                        class="prog-ref-btn selectable-card rounded-xl py-2.5 text-xs font-black text-gray-500 selected transition-all">RF</button>
+                                    <button type="button" data-value="RV"
+                                        class="prog-ref-btn selectable-card rounded-xl py-2.5 text-xs font-black text-gray-500 transition-all">RV</button>
+                                    <button type="button" data-value="IF"
+                                        class="prog-ref-btn selectable-card rounded-xl py-2.5 text-xs font-black text-gray-500 transition-all">IF</button>
+                                    <button type="button" data-value="IV"
+                                        class="prog-ref-btn selectable-card rounded-xl py-2.5 text-xs font-black text-gray-500 transition-all">IV</button>
+                                </div>
+                                <input type="hidden" id="prog-ref" value="RF">
                             </div>
                         </div>
 
@@ -668,6 +694,15 @@
             document.getElementById('btn-verify-pin').addEventListener('click', verifyPin);
             document.getElementById('btn-update-dash').addEventListener('click', updateDashboardFilter);
             document.getElementById('btn-save-rec').addEventListener('click', saveRecommendation);
+
+            // Handle Prog Ref Selectable Cards
+            document.querySelectorAll('.prog-ref-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.prog-ref-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    document.getElementById('prog-ref').value = btn.dataset.value;
+                });
+            });
         }
 
         function loadTherapeuticPrograms() {
