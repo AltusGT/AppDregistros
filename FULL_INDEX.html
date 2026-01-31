@@ -178,9 +178,17 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body class="text-gray-800 antialiased min-h-screen">
+    <script>
+        // CONFIGURACIÓN SUPABASE
+        const SUPABASE_URL = 'https://ikxiopzckkjxgihfqecv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlreGlvcHpja2tqeGdpaGZxZWN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NjA1MjAsImV4cCI6MjA4NTQzNjUyMH0.NKjFb74yjwA8V3jct6UQXJ3uX7dvxQjpTNBEGlpoUTQ';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
 
     <!-- Navigation -->
     <nav class="bg-white shadow-lg sticky top-0 z-50">
@@ -510,17 +518,21 @@
             setupListeners();
         }
 
-        function loadInitialData() {
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run.withSuccessHandler(populateFields).getData();
-            } else {
-                console.log('Using mock data');
-                const mockData = {
-                    students: ['Juan Perez', 'Maria Garcia'],
-                    educational: [{ grado: '3º', materia: 'Matemáticas', ocp: 'Suma' }],
-                    therapeutic: ['Control de Impulsos']
-                };
-                populateFields(mockData);
+        async function loadInitialData() {
+            try {
+                const { data: students, error: errS } = await _supabase.from('estudiantes').select('nombre');
+                const { data: edu, error: errE } = await _supabase.from('base_educativa').select('*');
+                const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('nombre');
+
+                if (errS || errE || errT) throw (errS || errE || errT);
+
+                populateFields({
+                    students: students.map(s => s.nombre),
+                    educational: edu,
+                    therapeutic: thermo.map(t => t.nombre)
+                });
+            } catch (err) {
+                Swal.fire('Error al cargar configuración', err.message, 'error');
             }
         }
 
@@ -773,35 +785,43 @@
             });
         }
 
-        function saveSessionToSheets() {
+        async function saveSessionToSheets() {
             if (currentSession.length === 0) return;
 
             Swal.fire({
-                title: 'Guardando...',
-                text: 'Enviando datos a la hoja de cálculo',
+                title: 'Guardando en Supabase...',
+                text: 'Sincronizando registros',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run
-                    .withSuccessHandler((res) => {
-                        Swal.fire('¡Éxito!', res.message, 'success');
-                        currentSession = [];
-                        renderTempTable();
-                        sessionId = 'SES-' + Date.now();
-                    })
-                    .withFailureHandler((err) => {
-                        Swal.fire('Error', 'Fallo al guardar: ' + err.message, 'error');
-                    })
-                    .saveSession(currentSession);
-            } else {
-                setTimeout(() => {
-                    Swal.fire('¡Éxito!', '(Simulacro) Sesión guardada', 'success');
-                    currentSession = [];
-                    renderTempTable();
-                    sessionId = 'SES-' + Date.now();
-                }, 1000);
+            try {
+                // Formatear datos para la tabla 'registros'
+                const toInsert = currentSession.map(r => ({
+                    id_sesion: r.idSesion,
+                    fecha_sesion: r.fechaSesion,
+                    estudiante: r.estudiante,
+                    tipo_registro: r.tipoRegistro,
+                    grado: r.grado,
+                    materia: r.materia,
+                    ocp: r.ocp,
+                    uac: parseFloat(r.uac),
+                    uai: parseFloat(r.uai),
+                    nivel_ayuda: r.nivelAyuda,
+                    reforzador: r.reforzador,
+                    programa_reforzamiento: r.programaReforzamiento
+                }));
+
+                const { error } = await _supabase.from('registros').insert(toInsert);
+
+                if (error) throw error;
+
+                Swal.fire('¡Éxito!', 'Sesión guardada en Supabase correctamente', 'success');
+                currentSession = [];
+                renderTempTable();
+                sessionId = 'SES-' + Date.now();
+            } catch (err) {
+                Swal.fire('Error Supabase', err.message, 'error');
             }
         }
 
@@ -872,94 +892,73 @@
             });
         }
 
-        function updateDashboardFilter() {
+        async function updateDashboardFilter() {
             const student = document.getElementById('dash-student').value;
             const program = document.getElementById('dash-program').value;
             const start = document.getElementById('dash-start').value;
             const end = document.getElementById('dash-end').value;
 
             if (!student) {
-                // If no student selected, clear chart silently
                 chartInstance.data.labels = [];
                 chartInstance.data.datasets.forEach(bs => bs.data = []);
                 chartInstance.update();
                 return;
             }
 
-            // Show loading toast instead of full blocker to be less intrusive on auto-update
             const Toast = Swal.mixin({
                 toast: true, position: 'top-end', showConfirmButton: false, timer: 1000, timerProgressBar: true
             });
-            Toast.fire({ icon: 'info', title: 'Cargando...' });
+            Toast.fire({ icon: 'info', title: 'Consultando Supabase...' });
 
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run
-                    .withSuccessHandler(renderDashboardData)
-                    .withFailureHandler(err => alert('Error en servidor: ' + err.message))
-                    .getDashboardData(student, start, end, program);
-            } else {
-                // Mock
-                console.log('Mock fetch for', student);
+            try {
+                let query = _supabase.from('registros')
+                    .select('*')
+                    .eq('estudiante', student);
+
+                if (program && program !== "Todos") query = query.eq('materia', program);
+                if (start) query = query.gte('fecha_sesion', start);
+                if (end) query = query.lte('fecha_sesion', end);
+
+                const { data, error } = await query.order('fecha_sesion', { ascending: true });
+
+                if (error) throw error;
+
+                // Adaptamos el formato de datos de Supabase para la función renderDashboardData
+                // Supabase devuelve objetos, transformamos a lo que esperaba la función original o adaptamos la función
+                renderDashboardData({ records: data });
+
+                if (data.length === 0) {
+                    Toast.fire({ icon: 'warning', title: 'No hay datos en Supabase' });
+                }
+            } catch (err) {
+                alert('Error Supabase: ' + err.message);
             }
         }
 
         function renderDashboardData(data) {
             Swal.close();
 
-            // Check for server-side error caught by try-catch
-            if (data.error) {
-                alert('❌ ERROR CRÍTICO EN EL SERVIDOR:\n' + data.error);
-                return;
-            }
-
-            // Success Diagnostic
-            if (data.records && (data.records.length > 0 || data.recommendations.length > 0)) {
-                const Toast = Swal.mixin({
-                    toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true
-                });
-                Toast.fire({ icon: 'success', title: `Cargados: ${data.records.length} registros y ${data.recommendations.length} notas.` });
-            }
-
-            // DEBUG DIAGNOSTIC
-            if (!data.records.length && !data.recommendations.length) {
-                let debugInfo = `
-             Búsqueda para: "${data.filterStudent}"
-             Total Registros en Hoja: ${data.totalRows}
-             Estudiantes encontrados en BD:
-             [${data.debugStudents ? data.debugStudents.join(', ') : '?'}]
-
-             Si su estudiante no está en la lista de 'Encontrados', revise si guardó la sesión.
-             `;
-
-                alert('⚠️ NO SE ENCONTRARON DATOS PARA MOSTRAR\n' + debugInfo);
-
-                // Clear chart
+            if (!data.records || data.records.length === 0) {
                 chartInstance.data.labels = [];
                 chartInstance.data.datasets.forEach(bs => bs.data = []);
                 chartInstance.update();
                 return;
             }
 
-            const labels = data.records.map(r => new Date(r[2]).toLocaleDateString());
-            const uacData = data.records.map(r => r[8]);
-            const uaiData = data.records.map(r => r[9]);
+            // Adaptación de mapeo: Supabase devuelve objetos con nombres de columnas
+            const labels = data.records.map(r => new Date(r.fecha_sesion).toLocaleDateString());
+            const uacData = data.records.map(r => r.uac);
+            const uaiData = data.records.map(r => r.uai);
 
             chartInstance.data.labels = labels;
             chartInstance.data.datasets[0].data = uacData;
             chartInstance.data.datasets[1].data = uaiData;
             chartInstance.update();
 
-            const list = document.getElementById('rec-list');
-            list.innerHTML = '';
-            data.recommendations.forEach(rec => {
-                const li = document.createElement('li');
-                li.className = 'bg-white p-3 rounded shadow-sm border-l-4 border-teal-500';
-                li.innerHTML = `<div class="text-xs text-gray-400">${new Date(rec[0]).toLocaleDateString()} - ${rec[2]}</div><div>${rec[3]}</div>`;
-                list.appendChild(li);
-            });
+            // Recomendaciones (Podemos expandir esto luego)
         }
 
-        function saveRecommendation() {
+        async function saveRecommendation() {
             const text = document.getElementById('recommendation-text').value;
             const student = document.getElementById('dash-student').value;
             const supervisor = document.getElementById('supervisor-name').value;
@@ -973,14 +972,25 @@
                 return;
             }
 
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run.saveRecommendation(student, text, supervisor);
+            try {
+                const { error } = await _supabase.from('recomendaciones').insert([{
+                    estudiante: student,
+                    supervisora: supervisor,
+                    recomendacion: text
+                }]);
+
+                if (error) throw error;
+
                 const list = document.getElementById('rec-list');
                 const li = document.createElement('li');
                 li.className = 'bg-white p-3 rounded shadow-sm border-l-4 border-teal-500 animate__animated animate__fadeIn';
                 li.innerHTML = `<div class="text-xs text-gray-400">Ahora - ${supervisor}</div><div>${text}</div>`;
                 list.prepend(li);
                 document.getElementById('recommendation-text').value = '';
+
+                Swal.fire('Listo', 'Recomendación guardada en Supabase', 'success');
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
             }
         }
 
