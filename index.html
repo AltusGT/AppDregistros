@@ -2,313 +2,567 @@
 <html lang="es">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALTUS | Sistema de Registros</title>
     <base target="_top">
-    <?!= include('css'); ?>
-    <!-- SweetAlert2 -->
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <!-- CSS Frameworks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        corp: {
+                            primary: '#385da9',
+                            primaryLight: '#4c77c9',
+                            secondary: '#faac3c',
+                            accent: '#e5442a',
+                            bg: '#f8fafc',
+                            text: '#1e293b',
+                            glass: 'rgba(255, 255, 255, 0.75)'
+                        }
+                    },
+                    borderRadius: {
+                        '3xl': '1.5rem',
+                        '4xl': '2rem'
+                    },
+                    boxShadow: {
+                        'premium': '0 10px 40px -10px rgba(0, 0, 0, 0.05)',
+                        'hover': '0 20px 50px -12px rgba(56, 93, 169, 0.15)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --primary: #385da9;
+            --secondary: #faac3c;
+            --accent: #e5442a;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-link.active {
+            background: linear-gradient(135deg, var(--primary) 0%, #4c77c9 100%);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(56, 93, 169, 0.3);
+        }
+
+        .sidebar-link:not(.active):hover {
+            background: rgba(56, 93, 169, 0.05);
+            color: var(--primary);
+        }
+
+        .input-premium {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-premium:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(56, 93, 169, 0.1);
+            outline: none;
+        }
+
+        .btn-premium-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #4c77c9 100%);
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .btn-premium-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px -5px rgba(56, 93, 169, 0.4);
+        }
+
+        .btn-premium-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, #fbc06d 100%);
+            color: #1a202c;
+            transition: all 0.3s;
+        }
+
+        .btn-premium-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px -5px rgba(250, 172, 60, 0.4);
+        }
+
+        /* Toggle Switch Custom */
+        .toggle-dot {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input:checked~.toggle-bg {
+            background-color: var(--primary);
+        }
+
+        input:checked~.toggle-dot {
+            transform: translateX(100%);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Charts & Containers */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Animations */
+        .page-transition {
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 
-<body class="text-gray-800 antialiased min-h-screen">
+<body class="bg-corp-bg min-h-screen flex overflow-hidden">
 
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <span class="text-2xl font-bold text-corp-primary tracking-tight">
-                        ALTUS
-                    </span>
+    <!-- Sidebar -->
+    <aside class="w-72 glass-effect h-screen sticky top-0 z-50 flex flex-col items-center py-8 px-6 border-r shadow-sm">
+        <div class="flex items-center space-x-3 mb-12">
+            <div
+                class="w-12 h-12 bg-corp-primary rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg">
+                A</div>
+            <div>
+                <h1 class="text-2xl font-bold text-corp-primary tracking-tight">ALTUS</h1>
+                <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Data Management</p>
+            </div>
+        </div>
+
+        <nav class="w-full space-y-3 flex-1">
+            <button id="nav-registros" onclick="switchView('registros')"
+                class="sidebar-link active w-full flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all group">
+                <svg class="w-5 h-5 group-hover:scale-110 transition" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                    </path>
+                </svg>
+                <span class="font-semibold">Registros</span>
+            </button>
+            <button id="nav-dashboard" onclick="switchView('dashboard')"
+                class="sidebar-link w-full flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all group">
+                <svg class="w-5 h-5 group-hover:scale-110 transition" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
+                <span class="font-semibold">Supervisión</span>
+            </button>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="mt-auto w-full pt-8 border-t">
+            <div class="bg-white/50 p-4 rounded-3xl flex items-center space-x-3 border shadow-sm">
+                <div
+                    class="w-10 h-10 rounded-full bg-corp-primary/10 flex items-center justify-center text-corp-primary">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                            clip-rule="evenodd"></path>
+                    </svg>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <button id="nav-registros"
-                        class="text-gray-600 hover:text-corp-primary font-medium px-3 py-2 rounded-md transition-colors active-nav">Registros</button>
-                    <button id="nav-dashboard"
-                        class="text-gray-600 hover:text-corp-primary font-medium px-3 py-2 rounded-md transition-colors">Supervisión</button>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold text-gray-800 truncate">Equipo Altus</p>
+                    <p class="text-xs text-gray-500 truncate">Admin / Terapeuta</p>
                 </div>
             </div>
         </div>
-    </nav>
+    </aside>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-1 overflow-y-auto px-8 py-8 h-screen">
 
-        <!-- VIEW: REGISTROS -->
-        <section id="view-registros" class="space-y-6">
-
-            <!-- Header & Config -->
-            <div class="glass-panel rounded-2xl p-6 mb-6 animate__animated animate__fadeIn">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-
-                    <!-- Type Toggle -->
-                    <div class="flex items-center justify-center md:justify-start">
-                        <span class="mr-3 text-sm font-bold text-gray-500 uppercase tracking-wide">Educativo</span>
-                        <div
-                            class="relative inline-block w-14 mr-2 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="toggle" id="type-toggle"
-                                class="toggle-checkbox absolute block w-8 h-8 rounded-full bg-white border-4 appearance-none cursor-pointer duration-500 ease-in-out" />
-                            <label for="type-toggle"
-                                class="toggle-label block overflow-hidden h-8 rounded-full bg-gray-300 cursor-pointer duration-500 ease-in-out"></label>
-                        </div>
-                        <span
-                            class="ml-3 text-sm font-bold text-corp-primary uppercase tracking-wide">Terapéutico</span>
-                    </div>
-
-                    <!-- Date & Date Picker -->
-                    <div class="text-center md:text-right">
-                        <input type="date" id="fecha-sesion"
-                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full md:w-auto p-2.5 input-transition"
-                            required>
-                    </div>
-                </div>
+        <!-- Top Bar -->
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h2 id="view-title" class="text-3xl font-extrabold text-corp-text">Registros de Sesión</h2>
+                <p id="view-subtitle" class="text-gray-500 font-medium mt-1">Gestión académica y terapéutica</p>
             </div>
 
-            <!-- Form Card -->
-            <div class="glass-panel rounded-2xl p-6 shadow-xl animate__animated animate__fadeInUp">
-                <form id="registro-form" class="space-y-6">
-
-                    <!-- Student Selection -->
-                    <div>
-                        <label for="estudiante" class="block mb-2 text-sm font-medium text-gray-900">Estudiante</label>
-                        <select id="estudiante"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5 input-transition">
-                            <option value="">Seleccione estudiante...</option>
-                            <!-- Filled via JS -->
-                        </select>
-                    </div>
-
-                    <!-- DYNAMIC SECTIONS -->
-                    <div id="educational-fields" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Grado -->
-                        <div>
-                            <label for="grado" class="block mb-2 text-sm font-medium text-gray-900">Grado</label>
-                            <select id="grado"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5 input-transition">
-                                <option value="">Seleccione...</option>
-                                <option>Pre-kinder</option>
-                                <option>Kinder</option>
-                                <option>Preparatoria</option>
-                                <option>1º</option>
-                                <option>2º</option>
-                                <option>3º</option>
-                                <option>4º</option>
-                                <option>5º</option>
-                            </select>
-                        </div>
-                        <!-- Materia -->
-                        <div>
-                            <label for="materia" class="block mb-2 text-sm font-medium text-gray-900">Materia</label>
-                            <select id="materia"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5 input-transition">
-                                <option value="">Seleccione...</option>
-                                <option>CyL</option>
-                                <option>Matemáticas</option>
-                                <option>Ciencia</option>
-                                <option>Ciudadanía</option>
-                                <option>Artes</option>
-                                <option>Música</option>
-                                <option>Desarrollo I</option>
-                                <option>Deporte</option>
-                                <option>Juego independiente</option>
-                            </select>
-                        </div>
-                        <!-- OCP -->
-                        <div>
-                            <label for="ocp" class="block mb-2 text-sm font-medium text-gray-900">OCP</label>
-                            <select id="ocp"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5 input-transition"
-                                disabled>
-                                <option value="">Seleccione Grado y Materia</option>
-                                <!-- Dynamic -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="therapeutic-fields" class="hidden">
-                        <label for="programa-terapeutico" class="block mb-2 text-sm font-medium text-gray-900">Programa
-                            Terapéutico</label>
-                        <select id="programa-terapeutico"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5 input-transition">
-                            <option value="">Seleccione programa...</option>
-                            <!-- Dynamic -->
-                        </select>
-                    </div>
-
-                    <!-- Common Fields Grid -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase">UAC</label>
-                            <input type="number" id="uac"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2"
-                                placeholder="0">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase">UAI</label>
-                            <input type="number" id="uai"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2"
-                                placeholder="0">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase">Nivel Ayuda</label>
-                            <select id="nivel-ayuda"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2">
-                                <option>Ninguna</option>
-                                <option>Gestual</option>
-                                <option>Verbal</option>
-                                <option>Física sombra</option>
-                                <option>Física parcial</option>
-                                <option>Física total</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase">Reforzador</label>
-                            <select id="reforzador"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2">
-                                <option>Ninguno</option>
-                                <option>Social</option>
-                                <option>Actividad</option>
-                                <option>Tangible</option>
-                                <option>Comestible</option>
-                                <option>Sensorial</option>
-                                <option>Economía</option>
-                            </select>
-                        </div>
-                        <!-- RF Programs -->
-                        <div class="col-span-2 md:col-span-4">
-                            <label class="block text-xs font-bold text-gray-500 uppercase">Programa
-                                Reforzamiento</label>
-                            <select id="prog-ref"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2">
-                                <option>RF</option>
-                                <option>RV</option>
-                                <option>IF</option>
-                                <option>IV</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex justify-end pt-4">
-                        <button type="button" id="btn-add-temp" class="btn-add-custom hover:shadow-xl transition-all">
-                            <span class="flex items-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                                Agregar Registro
-                            </span>
-                        </button>
-                    </div>
-
-                </form>
-            </div>
-
-            <!-- Temp Table -->
-            <div class="glass-panel rounded-2xl p-6 hidden" id="temp-table-container">
-                <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
-                        </path>
-                    </svg>
-                    Registros de la Sesión Actual
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-white uppercase bg-corp-primary">
-                            <tr>
-                                <th class="px-4 py-3 rounded-tl-lg">Hora</th>
-                                <th class="px-4 py-3">Tipo</th>
-                                <th class="px-4 py-3">Detalle</th>
-                                <th class="px-4 py-3">UAC/UAI</th>
-                                <th class="px-4 py-3 text-right rounded-tr-lg">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="temp-table-body">
-                            <!-- Rows here -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mt-6 flex justify-end">
-                    <button id="btn-save-session" class="btn-primary-custom w-full md:w-auto text-center">
-                        Guardar Sesión Completa
+            <div class="flex items-center space-x-4">
+                <div class="bg-white px-5 py-2.5 rounded-2xl shadow-premium flex items-center space-x-3 border">
+                    <span id="current-date-display" class="font-bold text-corp-primary text-sm uppercase">31 de Enero,
+                        2026</span>
+                    <div class="w-px h-4 bg-gray-200"></div>
+                    <button id="btn-test-conn"
+                        class="text-xs font-bold text-gray-400 hover:text-corp-primary transition">
+                        Sincronizar <i class="fas fa-sync-alt ml-1"></i>
                     </button>
                 </div>
             </div>
+        </header>
 
-        </section>
+        <!-- VIEW: REGISTROS -->
+        <section id="view-registros" class="page-transition space-y-8 pb-12">
 
-        <!-- VIEW: SUPERVISION / DASHBOARD -->
-        <section id="view-dashboard" class="hidden">
-            <div id="pin-screen"
-                class="glass-panel p-10 rounded-2xl max-w-sm mx-auto mt-20 text-center animate__animated animate__zoomIn">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Acceso Supervisión</h2>
-                <input type="password" id="pin-input"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-4 text-center mb-4 tracking-widest"
-                    placeholder="PIN" maxlength="4">
-                <button id="btn-verify-pin"
-                    class="w-full text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5">Acceder</button>
+            <!-- Context Header -->
+            <div
+                class="glass-effect rounded-4xl p-8 shadow-premium flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center bg-gray-100 p-1.5 rounded-2xl">
+                        <span class="px-5 py-2.5 text-xs font-bold text-gray-500 uppercase">Educativo</span>
+                        <label class="relative inline-flex items-center cursor-pointer mx-2">
+                            <input type="checkbox" id="type-toggle" class="sr-only peer">
+                            <div
+                                class="w-14 h-8 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all toggle-bg peer-checked:bg-corp-primary">
+                            </div>
+                        </label>
+                        <span class="px-5 py-2.5 text-xs font-bold text-corp-primary uppercase">Terapéutico</span>
+                    </div>
+                </div>
+
+                <div class="flex-1 max-w-xs w-full">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-2 mb-1 block">Fecha de Sesión</label>
+                    <input type="date" id="fecha-sesion" class="input-premium w-full font-semibold text-gray-700">
+                </div>
             </div>
 
-            <div id="dashboard-content" class="hidden space-y-6">
-                <!-- Filter Bar -->
-                <div class="glass-panel p-4 rounded-xl flex flex-wrap gap-4 items-end">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Estudiante</label>
-                        <select id="dash-student" class="bg-white border text-sm rounded-lg p-2 w-40"></select>
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                <!-- Registration Form -->
+                <div class="xl:col-span-8 bg-white rounded-4xl p-8 shadow-premium border border-gray-100">
+                    <div class="flex items-center space-x-3 mb-8">
+                        <div class="w-1.5 h-8 bg-corp-primary rounded-full"></div>
+                        <h3 class="text-xl font-bold">Nuevo Registro</h3>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Programa / Materia</label>
-                        <select id="dash-program" class="bg-white border text-sm rounded-lg p-2 w-40">
-                            <option value="">Todos</option>
-                        </select>
+
+                    <form id="registro-form" class="space-y-8">
+                        <!-- Row 1: Student -->
+                        <div class="grid grid-cols-1 gap-6">
+                            <div>
+                                <label class="text-sm font-bold text-gray-500 mb-2 block">Seleccione Estudiante</label>
+                                <select id="estudiante"
+                                    class="input-premium w-full py-4 text-lg font-semibold cursor-pointer">
+                                    <option value="">Buscar estudiante...</option>
+                                    <!-- Dynamic -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Dynamic Fields -->
+                        <div id="educational-fields"
+                            class="grid grid-cols-1 md:grid-cols-3 gap-6 animate__animated animate__fadeIn">
+                            <div>
+                                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Grado</label>
+                                <select id="grado" class="input-premium w-full text-sm font-bold">
+                                    <option value="">Seleccione...</option>
+                                    <option>Pre-kinder</option>
+                                    <option>Kinder</option>
+                                    <option>Preparatoria</option>
+                                    <option>1º</option>
+                                    <option>2º</option>
+                                    <option>3º</option>
+                                    <option>4º</option>
+                                    <option>5º</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Materia</label>
+                                <select id="materia" class="input-premium w-full text-sm font-bold">
+                                    <option value="">Seleccione...</option>
+                                    <option>CyL</option>
+                                    <option>Matemáticas</option>
+                                    <option>Ciencia</option>
+                                    <option>Ciudadanía</option>
+                                    <option>Artes</option>
+                                    <option>Música</option>
+                                    <option>Desarrollo I</option>
+                                    <option>Deporte</option>
+                                    <option>Juego independiente</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">OCP</label>
+                                <select id="ocp"
+                                    class="input-premium w-full text-sm font-bold border-dashed opacity-50 transition-all"
+                                    disabled>
+                                    <option value="">Primero seleccione grado/materia</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="therapeutic-fields" class="hidden animate__animated animate__fadeIn">
+                            <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Programa
+                                Terapéutico</label>
+                            <select id="programa-terapeutico" class="input-premium w-full text-sm font-bold">
+                                <option value="">Seleccione programa...</option>
+                                <!-- Dynamic -->
+                            </select>
+                        </div>
+
+                        <!-- Row 3: Actionable Data -->
+                        <div class="bg-gray-50 rounded-3xl p-6 grid grid-cols-2 md:grid-cols-4 gap-4 border">
+                            <div class="col-span-1">
+                                <label class="text-[10px] font-black text-corp-primary uppercase mb-1.5 block">UAC
+                                    (Aciertos)</label>
+                                <input type="number" id="uac"
+                                    class="input-premium w-full py-4 text-center text-2xl font-black text-corp-primary"
+                                    placeholder="0">
+                            </div>
+                            <div class="col-span-1">
+                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">UAI
+                                    (Intentos)</label>
+                                <input type="number" id="uai"
+                                    class="input-premium w-full py-4 text-center text-2xl font-black text-gray-400"
+                                    placeholder="0">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Nivel de
+                                    Ayuda</label>
+                                <select id="nivel-ayuda" class="input-premium w-full text-xs font-bold py-4">
+                                    <option>Ninguna</option>
+                                    <option>Gestual</option>
+                                    <option>Verbal</option>
+                                    <option>Física sombra</option>
+                                    <option>Física parcial</option>
+                                    <option>Física total</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label
+                                    class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Reforzador</label>
+                                <select id="reforzador" class="input-premium w-full text-xs font-bold">
+                                    <option>Ninguno</option>
+                                    <option>Social</option>
+                                    <option>Actividad</option>
+                                    <option>Tangible</option>
+                                    <option>Comestible</option>
+                                    <option>Sensorial</option>
+                                    <option>Economía</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-black text-gray-400 uppercase mb-1.5 block">Prog.
+                                    Reforzamiento</label>
+                                <select id="prog-ref" class="input-premium w-full text-xs font-bold">
+                                    <option>RF</option>
+                                    <option>RV</option>
+                                    <option>IF</option>
+                                    <option>IV</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-4">
+                            <button type="button" id="btn-add-temp"
+                                class="btn-premium-secondary px-10 py-4 rounded-2xl font-bold flex items-center space-x-3 shadow-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                <span>Añadir Registro</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Session Activity (Temp Table) -->
+                <div class="xl:col-span-4 bg-white rounded-4xl p-8 shadow-premium border border-gray-100 flex flex-col">
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-1.5 h-8 bg-corp-secondary rounded-full"></div>
+                            <h3 class="text-xl font-bold">Sesión Actual</h3>
+                        </div>
+                        <span id="session-count"
+                            class="bg-gray-100 text-gray-500 text-xs font-black px-3 py-1.5 rounded-xl">0</span>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Desde</label>
-                        <input type="date" id="dash-start" class="bg-white border text-sm rounded-lg p-2">
+
+                    <div id="temp-table-empty"
+                        class="flex-1 flex flex-col items-center justify-center text-center opacity-40 py-12">
+                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                        </div>
+                        <p class="text-sm font-semibold max-w-[180px]">No hay registros en esta sesión todavía.</p>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hasta</label>
-                        <input type="date" id="dash-end" class="bg-white border text-sm rounded-lg p-2">
+
+                    <div id="temp-table-container" class="hidden flex-1 overflow-y-auto max-h-[500px] mb-8 pr-2">
+                        <div id="temp-list" class="space-y-4">
+                            <!-- Rows go here -->
+                        </div>
+                    </div>
+
+                    <div id="save-session-area" class="hidden pt-6 border-t animate__animated animate__fadeInUp">
+                        <button id="btn-save-session"
+                            class="btn-premium-primary w-full py-5 rounded-2xl font-black text-lg shadow-lg">
+                            Finalizar y Guardar Sesión
+                        </button>
+                        <p class="text-[10px] text-center text-gray-400 mt-3 font-bold uppercase tracking-widest">
+                            Sincronización con Supabase BD</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: DASHBOARD -->
+        <section id="view-dashboard" class="hidden page-transition space-y-8 pb-12">
+
+            <div id="pin-screen" class="max-w-md mx-auto mt-20 text-center animate__animated animate__zoomIn">
+                <div class="bg-white rounded-4xl p-12 shadow-hover border">
+                    <div
+                        class="w-20 h-20 bg-corp-primary/10 rounded-3xl flex items-center justify-center text-corp-primary mx-auto mb-8">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Acceso Supervisión</h2>
+                    <p class="text-gray-500 mb-8 font-medium">Ingrese su PIN de seguridad</p>
+
+                    <input type="password" id="pin-input"
+                        class="bg-gray-100 border-none rounded-2xl text-3xl text-center py-5 w-full mb-6 tracking-[2rem] font-black focus:ring-4 focus:ring-corp-primary/10 transition-all outline-none"
+                        maxlength="4" placeholder="••••">
+
+                    <button id="btn-verify-pin" class="btn-premium-primary w-full py-4 rounded-2xl font-bold">Verificar
+                        Acceso</button>
+                </div>
+            </div>
+
+            <div id="dashboard-content" class="hidden space-y-8">
+                <!-- Filters Glass Bar -->
+                <div class="glass-effect rounded-4xl p-6 shadow-premium flex flex-wrap items-end gap-6 border">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block">Estudiante</label>
+                        <select id="dash-student" class="input-premium w-full text-sm font-bold"></select>
+                    </div>
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block">Programa /
+                            Materia</label>
+                        <select id="dash-program" class="input-premium w-full text-sm font-bold"></select>
+                    </div>
+                    <div class="w-40">
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block">Rango
+                            Desde</label>
+                        <input type="date" id="dash-start" class="input-premium w-full text-xs font-bold">
+                    </div>
+                    <div class="w-40">
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block">Hasta</label>
+                        <input type="date" id="dash-end" class="input-premium w-full text-xs font-bold">
                     </div>
                     <button id="btn-update-dash"
-                        class="bg-teal-600 text-white rounded-lg px-4 py-2 hover:bg-teal-700 text-sm font-bold">Filtrar</button>
+                        class="btn-premium-primary px-8 py-3.5 rounded-2xl font-bold shadow-lg">Analizar</button>
                 </div>
 
-                <!-- Charts -->
-                <div class="glass-panel p-6 rounded-2xl">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Evolución UAC vs UAI</h3>
-                    <div class="h-64 md:h-80">
-                        <canvas id="evolutionChart"></canvas>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Chart Card -->
+                    <div class="lg:col-span-8 bg-white rounded-4xl p-8 shadow-premium border border-gray-100">
+                        <div class="flex justify-between items-center mb-8">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-1.5 h-8 bg-corp-primary rounded-full"></div>
+                                <h3 class="text-xl font-bold text-gray-800">Tendencia de Logros</h3>
+                            </div>
+                            <div class="flex space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 rounded-full bg-corp-primary"></div>
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase">UAC</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 rounded-full bg-corp-accent"></div>
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase">UAI</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container overflow-hidden">
+                            <canvas id="evolutionChart"></canvas>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Recommendations -->
-                <div class="glass-panel p-6 rounded-2xl">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Recomendaciones y Notas</h3>
+                    <!-- Insight/Recs Card -->
+                    <div
+                        class="lg:col-span-4 bg-white rounded-4xl p-8 shadow-premium border border-gray-100 flex flex-col">
+                        <div class="flex items-center space-x-3 mb-8">
+                            <div class="w-1.5 h-8 bg-corp-secondary rounded-full"></div>
+                            <h3 class="text-xl font-bold text-gray-800">Recomendaciones</h3>
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-corp-primary uppercase mb-1">Nombre de
-                            Supervisora</label>
-                        <input type="text" id="supervisor-name"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5"
-                            placeholder="Escriba su nombre...">
-                    </div>
+                        <div class="space-y-6 flex-1">
+                            <input type="text" id="supervisor-name" class="input-premium w-full text-sm font-bold"
+                                placeholder="Tu nombre...">
+                            <textarea id="recommendation-text"
+                                class="input-premium w-full text-sm font-medium resize-none h-32"
+                                placeholder="Escribe aquí notas de supervisión..."></textarea>
+                            <button id="btn-save-rec"
+                                class="btn-premium-secondary w-full py-4 rounded-2xl font-bold shadow-lg">Publicar
+                                Nota</button>
+                        </div>
 
-                    <textarea id="recommendation-text"
-                        class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-teal-500 focus:border-teal-500"
-                        rows="3" placeholder="Escriba una nueva recomendación..."></textarea>
-                    <button id="btn-save-rec"
-                        class="mt-2 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 bg-corp-primary">Guardar
-                        Recomendación</button>
-
-                    <div class="mt-4 border-t pt-4">
-                        <h4 class="text-sm font-bold text-gray-500 uppercase mb-2">Historial Reciente</h4>
-                        <ul id="rec-list" class="space-y-2 text-sm text-gray-600">
-                            <!-- List items -->
-                        </ul>
+                        <div class="mt-8 pt-8 border-t flex-1">
+                            <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4">Últimas
+                                Intervenciones</p>
+                            <ul id="rec-list" class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                                <!-- List items -->
+                                <div class="py-12 flex justify-center items-center text-gray-300">
+                                    <i class="fas fa-comment-dots text-4xl"></i>
+                                </div>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -316,7 +570,415 @@
 
     </main>
 
-    <?!= include('js'); ?>
+    <!-- Supabase Logic -->
+    <script>
+        // CONFIGURACIÓN SUPABASE
+        const SUPABASE_URL = 'https://ikxiopzckkjxgihfqecv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlreGlvcHpja2tqeGdpaGZxZWN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NjA1MjAsImV4cCI6MjA4NTQzNjUyMH0.NKjFb74yjwA8V3jct6UQXJ3uX7dvxQjpTNBEGlpoUTQ';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // State
+        let studentsList = [];
+        let educationalBase = [];
+        let therapeuticBase = [];
+        let currentSession = [];
+        let sessionId = null;
+        let chartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        function init() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha-sesion').value = today;
+            sessionId = 'SES-' + Date.now();
+
+            updateDateDisplay();
+            loadInitialData();
+            setupListeners();
+        }
+
+        function updateDateDisplay() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = new Date().toLocaleDateString('es-ES', options);
+            document.getElementById('current-date-display').textContent = dateStr;
+        }
+
+        async function loadInitialData() {
+            try {
+                const { data: students, error: errS } = await _supabase.from('estudiantes').select('nombre');
+                const { data: edu, error: errE } = await _supabase.from('base_educativa').select('*');
+                const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('nombre');
+
+                if (errS || errE || errT) throw (errS || errE || errT);
+
+                populateFields({
+                    students: students.map(s => s.nombre),
+                    educational: edu,
+                    therapeutic: thermo.map(t => t.nombre)
+                });
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Error de Sincronización', text: err.message, background: '#fff', borderRadius: '1.5rem' });
+            }
+        }
+
+        function populateFields(data) {
+            studentsList = data.students || [];
+            educationalBase = data.educational || [];
+            therapeuticBase = data.therapeutic || [];
+
+            const studentSelect = document.getElementById('estudiante');
+            const dashStudent = document.getElementById('dash-student');
+
+            studentSelect.innerHTML = '<option value="">Seleccione estudiante...</option>';
+            dashStudent.innerHTML = '<option value="">Todos</option>';
+
+            studentsList.forEach(s => {
+                const opt = new Option(s, s);
+                studentSelect.add(opt);
+                dashStudent.add(opt.cloneNode(true));
+            });
+
+            // Dash Programs
+            const dashProg = document.getElementById('dash-program');
+            dashProg.innerHTML = '<option value="">Todos</option>';
+            const allPrograms = new Set([...educationalBase.map(e => e.materia), ...therapeuticBase]);
+            [...allPrograms].sort().forEach(p => dashProg.add(new Option(p, p)));
+        }
+
+        function setupListeners() {
+            document.getElementById('type-toggle').addEventListener('change', (e) => {
+                const isTherapeutic = e.target.checked;
+                const eduFields = document.getElementById('educational-fields');
+                const therFields = document.getElementById('therapeutic-fields');
+
+                if (isTherapeutic) {
+                    eduFields.classList.add('hidden');
+                    therFields.classList.remove('hidden');
+                    loadTherapeuticPrograms();
+                } else {
+                    eduFields.classList.remove('hidden');
+                    therFields.classList.add('hidden');
+                }
+            });
+
+            document.getElementById('grado').addEventListener('change', updateOCP);
+            document.getElementById('materia').addEventListener('change', updateOCP);
+            document.getElementById('btn-add-temp').addEventListener('click', addToTemp);
+            document.getElementById('btn-save-session').addEventListener('click', saveSession);
+            document.getElementById('btn-verify-pin').addEventListener('click', verifyPin);
+            document.getElementById('btn-update-dash').addEventListener('click', updateDashboardFilter);
+            document.getElementById('btn-save-rec').addEventListener('click', saveRecommendation);
+        }
+
+        function loadTherapeuticPrograms() {
+            const sel = document.getElementById('programa-terapeutico');
+            if (sel.options.length > 1) return;
+            therapeuticBase.forEach(p => sel.add(new Option(p, p)));
+        }
+
+        function updateOCP() {
+            const grado = document.getElementById('grado').value;
+            const materia = document.getElementById('materia').value;
+            const ocpSel = document.getElementById('ocp');
+            ocpSel.innerHTML = '<option value="">Seleccione OCP...</option>';
+
+            if (!grado || !materia) {
+                ocpSel.disabled = true;
+                ocpSel.classList.add('opacity-50', 'border-dashed');
+                return;
+            }
+
+            const matches = educationalBase.filter(item => item.grado === grado && item.materia === materia);
+            if (matches.length > 0) {
+                ocpSel.disabled = false;
+                ocpSel.classList.remove('opacity-50', 'border-dashed');
+                matches.forEach(m => ocpSel.add(new Option(m.ocp, m.ocp)));
+            } else {
+                ocpSel.innerHTML = '<option value="">No hay OCPs listados</option>';
+                ocpSel.disabled = true;
+            }
+        }
+
+        function addToTemp() {
+            const isTherapeutic = document.getElementById('type-toggle').checked;
+            const student = document.getElementById('estudiante').value;
+
+            if (!student) {
+                Swal.fire({ icon: 'warning', title: 'Falta información', text: 'Debe seleccionar un estudiante para registrar.' });
+                return;
+            }
+
+            const record = {
+                idSesion: sessionId,
+                fechaSesion: document.getElementById('fecha-sesion').value,
+                estudiante: student,
+                tipoRegistro: isTherapeutic ? 'Terapéutico' : 'Educativo',
+                grado: document.getElementById('grado').value,
+                materia: document.getElementById('materia').value,
+                ocp: document.getElementById('ocp').value,
+                programaTerapeutico: document.getElementById('programa-terapeutico').value,
+                uac: document.getElementById('uac').value || 0,
+                uai: document.getElementById('uai').value || 0,
+                nivelAyuda: document.getElementById('nivel-ayuda').value,
+                reforzador: document.getElementById('reforzador').value,
+                programaReforzamiento: document.getElementById('prog-ref').value
+            };
+
+            if (isTherapeutic && !record.programaTerapeutico) {
+                Swal.fire('Error', 'Seleccione programa terapéutico', 'error'); return;
+            }
+            if (!isTherapeutic && (!record.grado || !record.materia)) {
+                Swal.fire('Error', 'Seleccione grado y materia', 'error'); return;
+            }
+
+            if (isTherapeutic) { record.materia = record.programaTerapeutico; record.ocp = '-'; record.grado = '-'; }
+
+            currentSession.push(record);
+            renderTempTable();
+
+            // Clean inputs for next
+            document.getElementById('uac').value = '';
+            document.getElementById('uai').value = '';
+
+            // Animation feedback
+            const btn = document.getElementById('btn-add-temp');
+            btn.innerHTML = '<span>¡Agregado!</span>';
+            setTimeout(() => {
+                btn.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg><span>Añadir Registro</span>';
+            }, 1000);
+        }
+
+        function renderTempTable() {
+            const container = document.getElementById('temp-table-container');
+            const emptyEl = document.getElementById('temp-table-empty');
+            const saveArea = document.getElementById('save-session-area');
+            const list = document.getElementById('temp-list');
+            const countEl = document.getElementById('session-count');
+
+            list.innerHTML = '';
+            countEl.textContent = currentSession.length;
+
+            if (currentSession.length === 0) {
+                container.classList.add('hidden');
+                saveArea.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            saveArea.classList.remove('hidden');
+            emptyEl.classList.add('hidden');
+
+            currentSession.forEach((r, idx) => {
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const detail = r.tipoRegistro === 'Educativo' ? `${r.materia} · ${r.ocp}` : r.materia;
+
+                const item = `
+                    <div class="bg-gray-50 border rounded-2xl p-4 flex items-center justify-between group animate__animated animate__fadeInRight">
+                        <div class="flex-1 overflow-hidden">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="text-[10px] font-black uppercase text-gray-400">${time}</span>
+                                <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                <span class="text-[10px] font-black uppercase ${r.tipoRegistro === 'Educativo' ? 'text-corp-primary' : 'text-corp-secondary'}">${r.tipoRegistro}</span>
+                            </div>
+                            <h4 class="font-bold text-sm text-corp-text truncate" title="${detail}">${detail}</h4>
+                            <p class="text-[10px] font-bold text-gray-400 italic">LOGRO: ${r.uac} / ${r.uai}</p>
+                        </div>
+                        <button onclick="removeRecord(${idx})" class="w-10 h-10 rounded-xl bg-white border text-gray-300 hover:text-corp-accent hover:border-corp-accent transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                `;
+                list.insertAdjacentHTML('afterbegin', item);
+            });
+        }
+
+        function removeRecord(idx) {
+            currentSession.splice(idx, 1);
+            renderTempTable();
+        }
+
+        async function saveSession() {
+            if (currentSession.length === 0) return;
+
+            Swal.fire({
+                title: 'Sincronizando...',
+                text: 'Guardando datos en Supabase',
+                allowOutsideClick: false,
+                background: '#fff',
+                borderRadius: '1.5rem',
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const toInsert = currentSession.map(r => ({
+                    id_sesion: r.idSesion,
+                    fecha_sesion: r.fechaSesion,
+                    estudiante: r.estudiante,
+                    tipo_registro: r.tipoRegistro,
+                    grado: r.grado,
+                    materia: r.materia,
+                    ocp: r.ocp,
+                    uac: parseFloat(r.uac),
+                    uai: parseFloat(r.uai),
+                    nivel_ayuda: r.nivelAyuda,
+                    reforzador: r.reforzador,
+                    programa_reforzamiento: r.programaReforzamiento
+                }));
+
+                const { error } = await _supabase.from('registros').insert(toInsert);
+                if (error) throw error;
+
+                Swal.fire({ icon: 'success', title: '¡Hecho!', text: 'Sesión guardada y sincronizada correctamente.', borderRadius: '1.5rem' });
+                currentSession = [];
+                renderTempTable();
+                sessionId = 'SES-' + Date.now();
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Error servidor', text: err.message, borderRadius: '1.5rem' });
+            }
+        }
+
+        function switchView(view) {
+            const views = ['registros', 'dashboard'];
+            views.forEach(v => {
+                document.getElementById('view-' + v).classList.add('hidden');
+                document.getElementById('nav-' + v).classList.remove('active');
+            });
+
+            document.getElementById('view-' + view).classList.remove('hidden');
+            document.getElementById('nav-' + view).classList.add('active');
+
+            const title = document.getElementById('view-title');
+            const subtitle = document.getElementById('view-subtitle');
+
+            if (view === 'registros') {
+                title.textContent = 'Registros de Sesión';
+                subtitle.textContent = 'Gestión académica y terapéutica';
+            } else {
+                title.textContent = 'Supervisión Clínica';
+                subtitle.textContent = 'Análisis de evolución y logros';
+            }
+        }
+
+        function verifyPin() {
+            const pin = document.getElementById('pin-input').value;
+            if (pin === '1234') {
+                document.getElementById('pin-screen').classList.add('hidden');
+                document.getElementById('dashboard-content').classList.remove('hidden');
+                initChart();
+            } else {
+                Swal.fire('Error', 'PIN Incorrecto', 'error');
+            }
+            document.getElementById('pin-input').value = '';
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('evolutionChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'UAC', data: [], borderColor: '#385da9', backgroundColor: 'rgba(56, 93, 169, 0.1)', tension: 0.4, fill: true, pointRadius: 5 },
+                        { label: 'UAI', data: [], borderColor: '#e5442a', backgroundColor: 'transparent', tension: 0.4, borderDash: [5, 5], pointRadius: 3 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f1f1' }, ticks: { font: { weight: 'bold' } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        async function updateDashboardFilter() {
+            const student = document.getElementById('dash-student').value;
+            const program = document.getElementById('dash-program').value;
+            const start = document.getElementById('dash-start').value;
+            const end = document.getElementById('dash-end').value;
+
+            if (!student) return;
+
+            try {
+                let query = _supabase.from('registros').select('*').eq('estudiante', student);
+                if (program && program !== "Todos") query = query.eq('materia', program);
+                if (start) query = query.gte('fecha_sesion', start);
+                if (end) query = query.lte('fecha_sesion', end);
+
+                const { data, error } = await query.order('fecha_sesion', { ascending: true });
+                if (error) throw error;
+
+                const labels = data.map(r => new Date(r.fecha_sesion).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }));
+                chartInstance.data.labels = labels;
+                chartInstance.data.datasets[0].data = data.map(r => r.uac);
+                chartInstance.data.datasets[1].data = data.map(r => r.uai);
+                chartInstance.update();
+
+                loadRecommendations(student);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadRecommendations(student) {
+            const list = document.getElementById('rec-list');
+            list.innerHTML = '<div class="flex justify-center py-4"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-corp-primary"></div></div>';
+
+            try {
+                const { data, error } = await _supabase.from('recomendaciones').select('*').eq('estudiante', student).order('created_at', { ascending: false });
+                if (error) throw error;
+
+                list.innerHTML = '';
+                if (data.length === 0) {
+                    list.innerHTML = '<p class="text-xs text-center text-gray-400 py-8">Sin notas para este estudiante.</p>';
+                    return;
+                }
+
+                data.forEach(r => {
+                    const li = document.createElement('li');
+                    li.className = 'bg-gray-50 p-4 rounded-2xl border-l-4 border-corp-primary shadow-sm';
+                    li.innerHTML = `
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-[10px] font-black uppercase text-corp-primary">${r.supervisora}</span>
+                            <span class="text-[9px] text-gray-400">${new Date(r.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p class="text-sm font-medium text-gray-700">${r.recomendacion}</p>
+                    `;
+                    list.appendChild(li);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function saveRecommendation() {
+            const text = document.getElementById('recommendation-text').value;
+            const student = document.getElementById('dash-student').value;
+            const supervisor = document.getElementById('supervisor-name').value;
+
+            if (!text || !student || !supervisor) {
+                Swal.fire({ icon: 'warning', title: 'Faltan datos', text: 'Estudiante, Supervisora y Texto son obligatorios.' });
+                return;
+            }
+
+            try {
+                const { error } = await _supabase.from('recomendaciones').insert([{ estudiante: student, supervisora: supervisor, recomendacion: text }]);
+                if (error) throw error;
+
+                document.getElementById('recommendation-text').value = '';
+                Swal.fire({ icon: 'success', title: 'Nota Guardada', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                loadRecommendations(student);
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
+    </script>
 </body>
 
 </html>
