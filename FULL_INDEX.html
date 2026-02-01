@@ -670,6 +670,16 @@
             updateDateDisplay();
             loadInitialData();
             setupListeners();
+            initDashboardDates();
+        }
+
+        function initDashboardDates() {
+            const end = new Date();
+            const start = new Date();
+            start.setDate(start.getDate() - 30);
+
+            document.getElementById('dash-start').value = start.toISOString().split('T')[0];
+            document.getElementById('dash-end').value = end.toISOString().split('T')[0];
         }
 
         function updateDateDisplay() {
@@ -996,17 +1006,35 @@
                 if (end) query = query.lte('fecha_sesion', end);
 
                 const { data, error } = await query.order('fecha_sesion', { ascending: true });
-                if (error) throw error;
+                if (error) {
+                    console.error("Supabase Error:", error);
+                    return;
+                }
 
-                const labels = data.map(r => new Date(r.fecha_sesion).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }));
+                if (!data || data.length === 0) {
+                    Swal.fire({ icon: 'info', title: 'Sin datos', text: 'No se encontraron registros para este filtro.', timer: 2000, showConfirmButton: false });
+                    chartInstance.data.labels = [];
+                    chartInstance.data.datasets[0].data = [];
+                    chartInstance.data.datasets[1].data = [];
+                    chartInstance.update();
+                    return;
+                }
+
+                const labels = data.map(r => {
+                    const d = new Date(r.fecha_sesion);
+                    // Force UTC to avoid timezone shifts in labels
+                    const utcDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
+                    return utcDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                });
+
                 chartInstance.data.labels = labels;
-                chartInstance.data.datasets[0].data = data.map(r => r.uac);
-                chartInstance.data.datasets[1].data = data.map(r => r.uai);
+                chartInstance.data.datasets[0].data = data.map(r => parseFloat(r.uac));
+                chartInstance.data.datasets[1].data = data.map(r => parseFloat(r.uai));
                 chartInstance.update();
 
                 loadRecommendations(student);
             } catch (err) {
-                console.error(err);
+                console.error("Dashboard Error:", err);
             }
         }
 
