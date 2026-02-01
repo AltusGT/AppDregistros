@@ -224,6 +224,78 @@
             box-shadow: 0 4px 12px rgba(56, 93, 169, 0.1);
         }
 
+        /* Mobile Responsiveness */
+        @media (max-width: 1024px) {
+            body {
+                flex-direction: column;
+                overflow-y: auto !important;
+            }
+
+            aside {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                width: 280px;
+                height: 100vh;
+                z-index: 100;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                background: white !important;
+            }
+
+            aside.open {
+                left: 0;
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+            }
+
+            main {
+                padding: 1.5rem !important;
+                height: auto !important;
+                overflow-y: visible !important;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 1.5rem;
+                margin-top: 3rem;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+                z-index: 90;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+
+        .mobile-header {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-header {
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
+                z-index: 80;
+                padding: 0 1.5rem;
+                align-items: center;
+                justify-content: space-between;
+                border-bottom: 1px solid #eee;
+            }
+        }
+
         /* Animations */
         .page-transition {
             animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -249,9 +321,27 @@
 </head>
 
 <body class="bg-corp-bg min-h-screen flex overflow-hidden">
+    <!-- Mobile Navigation Toggle -->
+    <div class="mobile-header">
+        <div class="flex items-center space-x-2">
+            <div
+                class="w-8 h-8 bg-corp-primary rounded-lg flex items-center justify-center text-white font-black text-sm">
+                A</div>
+            <span class="font-bold text-corp-primary tracking-tight">ALTUS</span>
+        </div>
+        <button id="mobile-menu-toggle" class="p-2 text-corp-primary">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
     <!-- Sidebar -->
-    <aside class="w-72 glass-effect h-screen sticky top-0 z-50 flex flex-col items-center py-8 px-6 border-r shadow-sm">
+    <aside id="main-sidebar"
+        class="w-72 glass-effect h-screen sticky top-0 z-50 flex flex-col items-center py-8 px-6 border-r shadow-sm">
         <div class="flex items-center space-x-3 mb-12">
             <div
                 class="w-12 h-12 bg-corp-primary rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg">
@@ -753,6 +843,30 @@
             document.getElementById('btn-verify-pin').addEventListener('click', verifyPin);
             document.getElementById('btn-update-dash').addEventListener('click', updateDashboardFilter);
             document.getElementById('btn-save-rec').addEventListener('click', saveRecommendation);
+
+            // Mobile Sidebar Toggles
+            const sidebar = document.getElementById('main-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const toggle = document.getElementById('mobile-menu-toggle');
+
+            const closeSidebar = () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            };
+
+            toggle.addEventListener('click', () => {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            });
+
+            overlay.addEventListener('click', closeSidebar);
+
+            // Close sidebar when clicking a link on mobile
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 1024) closeSidebar();
+                });
+            });
 
             // Handle Prog Ref Selectable Cards
             document.querySelectorAll('.prog-ref-btn').forEach(btn => {
