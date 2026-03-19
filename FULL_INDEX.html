@@ -581,12 +581,37 @@
                         </div>
 
                         <div id="therapeutic-fields" class="hidden animate__animated animate__fadeIn">
-                            <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Programa
-                                Terapéutico</label>
-                            <select id="programa-terapeutico" class="input-premium w-full text-sm font-bold">
-                                <option value="">Seleccione programa...</option>
-                                <!-- Dynamic -->
-                            </select>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="relative">
+                                    <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Programa Terapéutico</label>
+                                    <div class="relative">
+                                        <select id="programa-terapeutico" class="input-premium w-full text-sm font-bold pr-10">
+                                            <option value="">Seleccione programa...</option>
+                                            <!-- Dynamic -->
+                                        </select>
+                                        <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">OCP (Terapéutico)</label>
+                                    <div class="relative">
+                                        <select id="ocp-terapeutico" 
+                                            class="input-premium w-full text-sm font-bold border-dashed opacity-50 transition-all pr-10"
+                                            disabled>
+                                            <option value="">Primero seleccione programa</option>
+                                        </select>
+                                        <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Row 3: Actionable Data -->
@@ -858,7 +883,7 @@
             try {
                 const { data: students, error: errS } = await _supabase.from('estudiantes').select('nombre');
                 const { data: edu, error: errE } = await _supabase.from('base_educativa').select('*');
-                const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('Programa');
+                const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('*');
                 
                 // Fetch unique contents from previous records
                 const { data: contentsData, error: errC } = await _supabase.from('registros').select('contenido');
@@ -871,7 +896,7 @@
                 populateFields({
                     students: students.map(s => s.nombre),
                     educational: edu,
-                    therapeutic: thermo.map(t => t.Programa),
+                    therapeutic: thermo,
                     contents: uniqueContents
                 });
             } catch (err) {
@@ -911,7 +936,7 @@
             // Dash Programs
             const dashProg = document.getElementById('dash-program');
             dashProg.innerHTML = '<option value="">Todos</option>';
-            const allPrograms = new Set([...educationalBase.map(e => e.materia), ...therapeuticBase]);
+            const allPrograms = new Set([...educationalBase.map(e => e.materia), ...therapeuticBase.map(t => t.Programa || t.programa)]);
             [...allPrograms].sort().forEach(p => dashProg.add(new Option(p, p)));
         }
 
@@ -933,6 +958,7 @@
 
             document.getElementById('grado').addEventListener('change', updateOCP);
             document.getElementById('materia').addEventListener('change', updateOCP);
+            document.getElementById('programa-terapeutico').addEventListener('change', updateOCPTerapeutico);
             document.getElementById('btn-add-temp').addEventListener('click', addToTemp);
             document.getElementById('btn-save-session').addEventListener('click', saveSession);
             document.getElementById('btn-verify-pin').addEventListener('click', verifyPin);
@@ -976,7 +1002,35 @@
         function loadTherapeuticPrograms() {
             const sel = document.getElementById('programa-terapeutico');
             if (sel.options.length > 1) return;
-            therapeuticBase.forEach(p => sel.add(new Option(p, p)));
+            
+            // Get unique programs
+            const programs = [...new Set(therapeuticBase.map(t => t.Programa || t.programa))].sort();
+            programs.forEach(p => sel.add(new Option(p, p)));
+        }
+
+        function updateOCPTerapeutico() {
+            const program = document.getElementById('programa-terapeutico').value;
+            const ocpSel = document.getElementById('ocp-terapeutico');
+            ocpSel.innerHTML = '<option value="">Seleccione OCP...</option>';
+
+            if (!program) {
+                ocpSel.disabled = true;
+                ocpSel.classList.add('opacity-50', 'border-dashed');
+                return;
+            }
+
+            const matches = therapeuticBase.filter(t => (t.Programa || t.programa) === program);
+            if (matches.length > 0 && matches[0].ocp) {
+                ocpSel.disabled = false;
+                ocpSel.classList.remove('opacity-50', 'border-dashed');
+                matches.forEach(m => {
+                    if (m.ocp) ocpSel.add(new Option(m.ocp, m.ocp));
+                });
+            } else {
+                ocpSel.innerHTML = '<option value="">Sin OCPs listados</option>';
+                ocpSel.disabled = true;
+                ocpSel.classList.add('opacity-50', 'border-dashed');
+            }
         }
 
         function updateOCP() {
@@ -1016,11 +1070,11 @@
                 fechaSesion: document.getElementById('fecha-sesion').value,
                 estudiante: student,
                 tipoRegistro: isTherapeutic ? 'Terapéutico' : 'Educativo',
-                grado: document.getElementById('grado').value,
-                materia: document.getElementById('materia').value,
-                contenido: document.getElementById('contenido').value,
-                ocp: document.getElementById('ocp').value,
-                programaTerapeutico: document.getElementById('programa-terapeutico').value,
+                grado: isTherapeutic ? '-' : document.getElementById('grado').value,
+                materia: isTherapeutic ? document.getElementById('programa-terapeutico').value : document.getElementById('materia').value,
+                contenido: isTherapeutic ? '-' : document.getElementById('contenido').value,
+                ocp: isTherapeutic ? document.getElementById('ocp-terapeutico').value : document.getElementById('ocp').value,
+                programaTerapeutico: isTherapeutic ? document.getElementById('programa-terapeutico').value : '',
                 uac: document.getElementById('uac').value || 0,
                 uai: document.getElementById('uai').value || 0,
                 nivelAyuda: document.getElementById('nivel-ayuda').value,
@@ -1031,11 +1085,12 @@
             if (isTherapeutic && !record.programaTerapeutico) {
                 Swal.fire('Error', 'Seleccione programa terapéutico', 'error'); return;
             }
+            if (isTherapeutic && !record.ocp) {
+                Swal.fire('Error', 'Seleccione OCP terapéutico', 'error'); return;
+            }
             if (!isTherapeutic && (!record.grado || !record.materia)) {
                 Swal.fire('Error', 'Seleccione grado y materia', 'error'); return;
             }
-
-            if (isTherapeutic) { record.materia = record.programaTerapeutico; record.ocp = '-'; record.grado = '-'; }
 
             currentSession.push(record);
             renderTempTable();
