@@ -120,12 +120,16 @@
             color: var(--primary);
         }
 
-        .input-premium {
+        .input-premium,
+        select.input-premium {
             background: #ffffff;
             border: 1.5px solid #e2e8f0;
             border-radius: 1rem;
-            padding: 0.75rem 1rem;
+            padding: 0.85rem 1rem;
+            height: 52px; /* Fixed height for consistency */
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            appearance: none;
+            -webkit-appearance: none;
         }
 
         .input-premium:focus {
@@ -501,50 +505,78 @@
                         <!-- Row 2: Dynamic Fields -->
                         <div id="educational-fields"
                             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate__animated animate__fadeIn">
-                            <div>
+                            <div class="relative">
                                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Grado</label>
-                                <select id="grado" class="input-premium w-full text-sm font-bold">
-                                    <option value="">Seleccione...</option>
-                                    <option>Pre-kinder</option>
-                                    <option>Kinder</option>
-                                    <option>Preparatoria</option>
-                                    <option>1º</option>
-                                    <option>2º</option>
-                                    <option>3º</option>
-                                    <option>4º</option>
-                                    <option>5º</option>
-                                </select>
+                                <div class="relative">
+                                    <select id="grado" class="input-premium w-full text-sm font-bold pr-10">
+                                        <option value="">Seleccione...</option>
+                                        <option>Pre-kinder</option>
+                                        <option>Kinder</option>
+                                        <option>Preparatoria</option>
+                                        <option>1º</option>
+                                        <option>2º</option>
+                                        <option>3º</option>
+                                        <option>4º</option>
+                                        <option>5º</option>
+                                    </select>
+                                    <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
+                            <div class="relative">
                                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Materia</label>
-                                <select id="materia" class="input-premium w-full text-sm font-bold">
-                                    <option value="">Seleccione...</option>
-                                    <option>CyL</option>
-                                    <option>Matemáticas</option>
-                                    <option>Ciencia</option>
-                                    <option>Ciudadanía</option>
-                                    <option>Artes</option>
-                                    <option>Música</option>
-                                    <option>Desarrollo I</option>
-                                    <option>Deporte</option>
-                                    <option>Juego independiente</option>
-                                </select>
+                                <div class="relative">
+                                    <select id="materia" class="input-premium w-full text-sm font-bold pr-10">
+                                        <option value="">Seleccione...</option>
+                                        <option>CyL</option>
+                                        <option>Matemáticas</option>
+                                        <option>Ciencia</option>
+                                        <option>Ciudadanía</option>
+                                        <option>Artes</option>
+                                        <option>Música</option>
+                                        <option>Desarrollo I</option>
+                                        <option>Deporte</option>
+                                        <option>Juego independiente</option>
+                                    </select>
+                                    <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
+                            <div class="relative">
                                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Contenido</label>
-                                <input list="contenido-list" id="contenido" placeholder="Escriba o seleccione..."
-                                    class="input-premium w-full text-sm font-bold">
+                                <div class="relative">
+                                    <input list="contenido-list" id="contenido" placeholder="Escriba o seleccione..."
+                                        class="input-premium w-full text-sm font-bold pr-10">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
                                 <datalist id="contenido-list">
                                     <!-- Dynamic contents from DB -->
                                 </datalist>
                             </div>
-                            <div>
+                            <div class="relative">
                                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">OCP</label>
-                                <select id="ocp"
-                                    class="input-premium w-full text-sm font-bold border-dashed opacity-50 transition-all"
-                                    disabled>
-                                    <option value="">Primero seleccione grado/materia</option>
-                                </select>
+                                <div class="relative">
+                                    <select id="ocp"
+                                        class="input-premium w-full text-sm font-bold border-dashed opacity-50 transition-all pr-10"
+                                        disabled>
+                                        <option value="">Primero seleccione grado/materia</option>
+                                    </select>
+                                    <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
