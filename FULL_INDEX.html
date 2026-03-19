@@ -500,7 +500,7 @@
 
                         <!-- Row 2: Dynamic Fields -->
                         <div id="educational-fields"
-                            class="grid grid-cols-1 md:grid-cols-3 gap-6 animate__animated animate__fadeIn">
+                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate__animated animate__fadeIn">
                             <div>
                                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Grado</label>
                                 <select id="grado" class="input-premium w-full text-sm font-bold">
@@ -529,6 +529,14 @@
                                     <option>Deporte</option>
                                     <option>Juego independiente</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Contenido</label>
+                                <input list="contenido-list" id="contenido" placeholder="Escriba o seleccione..."
+                                    class="input-premium w-full text-sm font-bold">
+                                <datalist id="contenido-list">
+                                    <!-- Dynamic contents from DB -->
+                                </datalist>
                             </div>
                             <div>
                                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">OCP</label>
@@ -819,15 +827,24 @@
                 const { data: students, error: errS } = await _supabase.from('estudiantes').select('nombre');
                 const { data: edu, error: errE } = await _supabase.from('base_educativa').select('*');
                 const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('Programa');
+                
+                // Fetch unique contents from previous records
+                const { data: contentsData, error: errC } = await _supabase.from('registros').select('contenido');
 
                 if (errS || errE || errT) throw (errS || errE || errT);
+                
+                // Extract unique contents, filtering out nulls
+                const uniqueContents = [...new Set(contentsData ? contentsData.map(c => c.contenido).filter(Boolean) : [])];
 
                 populateFields({
                     students: students.map(s => s.nombre),
                     educational: edu,
-                    therapeutic: thermo.map(t => t.Programa)
+                    therapeutic: thermo.map(t => t.Programa),
+                    contents: uniqueContents
                 });
             } catch (err) {
+                console.warn('Note: if "contenido" column is missing in DB, fetching contents might fail. This is normal if this is a first-time setup.', err);
+                // Continue with whatever succeeded
                 Swal.fire({ icon: 'error', title: 'Error de Sincronización', text: err.message, background: '#fff', borderRadius: '1.5rem' });
             }
         }
@@ -836,6 +853,7 @@
             studentsList = data.students || [];
             educationalBase = data.educational || [];
             therapeuticBase = data.therapeutic || [];
+            const contentsList = data.contents || [];
 
             const studentSelect = document.getElementById('estudiante');
             const dashStudent = document.getElementById('dash-student');
@@ -847,6 +865,15 @@
                 const opt = new Option(s, s);
                 studentSelect.add(opt);
                 dashStudent.add(opt.cloneNode(true));
+            });
+
+            // Populate Contenido Datalist
+            const contenidoDatalist = document.getElementById('contenido-list');
+            contenidoDatalist.innerHTML = '';
+            contentsList.sort().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                contenidoDatalist.appendChild(opt);
             });
 
             // Dash Programs
@@ -959,6 +986,7 @@
                 tipoRegistro: isTherapeutic ? 'Terapéutico' : 'Educativo',
                 grado: document.getElementById('grado').value,
                 materia: document.getElementById('materia').value,
+                contenido: document.getElementById('contenido').value,
                 ocp: document.getElementById('ocp').value,
                 programaTerapeutico: document.getElementById('programa-terapeutico').value,
                 uac: document.getElementById('uac').value || 0,
@@ -983,6 +1011,7 @@
             // Clean inputs for next
             document.getElementById('uac').value = '';
             document.getElementById('uai').value = '';
+            document.getElementById('contenido').value = '';
 
             // Animation feedback
             const btn = document.getElementById('btn-add-temp');
@@ -1015,7 +1044,7 @@
 
             currentSession.forEach((r, idx) => {
                 const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const detail = r.tipoRegistro === 'Educativo' ? `${r.materia} · ${r.ocp}` : r.materia;
+                const detail = r.tipoRegistro === 'Educativo' ? `${r.materia} · ${r.contenido || ''} · ${r.ocp}` : r.materia;
 
                 const item = `
                     <div class="bg-gray-50 border rounded-2xl p-4 flex items-center justify-between group animate__animated animate__fadeInRight">
@@ -1062,6 +1091,7 @@
                     tipo_registro: r.tipoRegistro,
                     grado: r.grado,
                     materia: r.materia,
+                    contenido: r.contenido,
                     ocp: r.ocp,
                     uac: parseFloat(r.uac),
                     uai: parseFloat(r.uai),
