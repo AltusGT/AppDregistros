@@ -564,18 +564,17 @@
                                 </datalist>
                             </div>
                             <div class="relative">
-                                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">OCP</label>
+                                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Criterio / OCP</label>
                                 <div class="relative">
-                                    <select id="ocp"
+                                    <input list="ocp-list" id="ocp" placeholder="Escriba o seleccione..."
                                         class="input-premium w-full text-sm font-bold border-dashed opacity-50 transition-all pr-10"
                                         disabled>
-                                        <option value="">Primero seleccione grado/materia</option>
-                                    </select>
-                                    <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </div>
+                                    <datalist id="ocp-list"></datalist>
                                 </div>
                             </div>
                         </div>
@@ -585,10 +584,10 @@
                                 <div class="relative">
                                     <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Programa Terapéutico</label>
                                     <div class="relative">
-                                        <select id="programa-terapeutico" class="input-premium w-full text-sm font-bold pr-10">
-                                            <option value="">Seleccione programa...</option>
-                                            <!-- Dynamic -->
-                                        </select>
+                                        <input list="programa-terapeutico-list" id="programa-terapeutico" 
+                                            placeholder="Escriba o seleccione programa..."
+                                            class="input-premium w-full text-sm font-bold pr-10">
+                                        <datalist id="programa-terapeutico-list"></datalist>
                                         <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
@@ -597,18 +596,18 @@
                                     </div>
                                 </div>
                                 <div class="relative">
-                                    <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">OCP (Terapéutico)</label>
+                                    <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Criterio / OCP (Terapéutico)</label>
                                     <div class="relative">
-                                        <select id="ocp-terapeutico" 
+                                        <input list="ocp-terapeutico-list" id="ocp-terapeutico" 
+                                            placeholder="Escriba o seleccione..."
                                             class="input-premium w-full text-sm font-bold border-dashed opacity-50 transition-all pr-10"
                                             disabled>
-                                            <option value="">Primero seleccione programa</option>
-                                        </select>
-                                        <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
+                                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
                                             </svg>
                                         </div>
+                                        <datalist id="ocp-terapeutico-list"></datalist>
                                     </div>
                                 </div>
                             </div>
@@ -854,7 +853,8 @@
         document.addEventListener('DOMContentLoaded', init);
 
         function init() {
-            const today = new Date().toISOString().split('T')[0];
+            // Fix: Use local date instead of UTC to avoid timezone issues
+            const today = new Date().toLocaleDateString('en-CA'); 
             document.getElementById('fecha-sesion').value = today;
             sessionId = 'SES-' + Date.now();
 
@@ -958,6 +958,7 @@
 
             document.getElementById('grado').addEventListener('change', updateOCP);
             document.getElementById('materia').addEventListener('change', updateOCP);
+            document.getElementById('programa-terapeutico').addEventListener('input', updateOCPTerapeutico);
             document.getElementById('programa-terapeutico').addEventListener('change', updateOCPTerapeutico);
             document.getElementById('btn-add-temp').addEventListener('click', addToTemp);
             document.getElementById('btn-save-session').addEventListener('click', saveSession);
@@ -1000,59 +1001,80 @@
         }
 
         function loadTherapeuticPrograms() {
-            const sel = document.getElementById('programa-terapeutico');
-            if (sel.options.length > 1) return;
+            const list = document.getElementById('programa-terapeutico-list');
+            if (list.options.length > 0) return;
             
             // Get unique programs
-            const programs = [...new Set(therapeuticBase.map(t => t.Programa || t.programa))].sort();
-            programs.forEach(p => sel.add(new Option(p, p)));
+            const programs = [...new Set(therapeuticBase.map(t => t.Programa || t.programa).filter(Boolean))].sort();
+            programs.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                list.appendChild(opt);
+            });
         }
 
         function updateOCPTerapeutico() {
             const program = document.getElementById('programa-terapeutico').value;
-            const ocpSel = document.getElementById('ocp-terapeutico');
-            ocpSel.innerHTML = '<option value="">Seleccione OCP...</option>';
+            const ocpInput = document.getElementById('ocp-terapeutico');
+            const ocpList = document.getElementById('ocp-terapeutico-list');
+            
+            ocpList.innerHTML = '';
+            ocpInput.value = '';
 
             if (!program) {
-                ocpSel.disabled = true;
-                ocpSel.classList.add('opacity-50', 'border-dashed');
+                ocpInput.disabled = true;
+                ocpInput.placeholder = 'Primero seleccione programa';
+                ocpInput.classList.add('opacity-50', 'border-dashed');
                 return;
             }
 
+            // Always enable to allow manual entry once program is selected
+            ocpInput.disabled = false;
+            ocpInput.placeholder = 'Escriba o seleccione criterio...';
+            ocpInput.classList.remove('opacity-50', 'border-dashed');
+
             const matches = therapeuticBase.filter(t => (t.Programa || t.programa) === program);
-            if (matches.length > 0 && matches[0].ocp) {
-                ocpSel.disabled = false;
-                ocpSel.classList.remove('opacity-50', 'border-dashed');
+            if (matches.length > 0) {
                 matches.forEach(m => {
-                    if (m.ocp) ocpSel.add(new Option(m.ocp, m.ocp));
+                    if (m.ocp) {
+                        const opt = document.createElement('option');
+                        opt.value = m.ocp;
+                        ocpList.appendChild(opt);
+                    }
                 });
-            } else {
-                ocpSel.innerHTML = '<option value="">Sin OCPs listados</option>';
-                ocpSel.disabled = true;
-                ocpSel.classList.add('opacity-50', 'border-dashed');
             }
         }
 
         function updateOCP() {
             const grado = document.getElementById('grado').value;
             const materia = document.getElementById('materia').value;
-            const ocpSel = document.getElementById('ocp');
-            ocpSel.innerHTML = '<option value="">Seleccione OCP...</option>';
+            const ocpInput = document.getElementById('ocp');
+            const ocpList = document.getElementById('ocp-list');
+            
+            ocpList.innerHTML = '';
+            ocpInput.value = '';
 
             if (!grado || !materia) {
-                ocpSel.disabled = true;
-                ocpSel.classList.add('opacity-50', 'border-dashed');
+                ocpInput.disabled = true;
+                ocpInput.placeholder = 'Primero seleccione grado/materia';
+                ocpInput.classList.add('opacity-50', 'border-dashed');
                 return;
             }
 
+            // Always enable to allow manual entry once grado/materia are selected
+            ocpInput.disabled = false;
+            ocpInput.placeholder = 'Escriba o seleccione criterio...';
+            ocpInput.classList.remove('opacity-50', 'border-dashed');
+
             const matches = educationalBase.filter(item => item.grado === grado && item.materia === materia);
             if (matches.length > 0) {
-                ocpSel.disabled = false;
-                ocpSel.classList.remove('opacity-50', 'border-dashed');
-                matches.forEach(m => ocpSel.add(new Option(m.ocp, m.ocp)));
-            } else {
-                ocpSel.innerHTML = '<option value="">No hay OCPs listados</option>';
-                ocpSel.disabled = true;
+                matches.forEach(m => {
+                    if (m.ocp) {
+                        const opt = document.createElement('option');
+                        opt.value = m.ocp;
+                        ocpList.appendChild(opt);
+                    }
+                });
             }
         }
 
@@ -1086,10 +1108,13 @@
                 Swal.fire('Error', 'Seleccione programa terapéutico', 'error'); return;
             }
             if (isTherapeutic && !record.ocp) {
-                Swal.fire('Error', 'Seleccione OCP terapéutico', 'error'); return;
+                Swal.fire('Error', 'Seleccione o escriba Criterio terapéutico', 'error'); return;
             }
             if (!isTherapeutic && (!record.grado || !record.materia)) {
                 Swal.fire('Error', 'Seleccione grado y materia', 'error'); return;
+            }
+            if (!isTherapeutic && !record.ocp) {
+                Swal.fire('Error', 'Seleccione o escriba Criterio (OCP)', 'error'); return;
             }
 
             currentSession.push(record);
@@ -1180,8 +1205,8 @@
                     materia: r.materia,
                     contenido: r.contenido,
                     ocp: r.ocp,
-                    uac: parseFloat(r.uac),
-                    uai: parseFloat(r.uai),
+                    uac: parseInt(r.uac) || 0,
+                    uai: parseInt(r.uai) || 0,
                     nivel_ayuda: r.nivelAyuda,
                     reforzador: r.reforzador,
                     programa_reforzamiento: r.programaReforzamiento
