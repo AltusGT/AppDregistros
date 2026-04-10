@@ -20,8 +20,6 @@
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
         tailwind.config = {
             theme: {
@@ -719,7 +717,7 @@
                             Finalizar y Guardar Sesión
                         </button>
                         <p class="text-[10px] text-center text-gray-400 mt-3 font-bold uppercase tracking-widest">
-                            Sincronización con Supabase BD</p>
+                            Sincronización con Google Sheets</p>
                     </div>
                 </div>
             </div>
@@ -835,13 +833,8 @@
 
     </main>
 
-    <!-- Supabase Logic -->
+    <!-- Google Apps Script Logic -->
     <script>
-        // CONFIGURACIÓN SUPABASE
-        const SUPABASE_URL = 'https://ikxiopzckkjxgihfqecv.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlreGlvcHpja2tqeGdpaGZxZWN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NjA1MjAsImV4cCI6MjA4NTQzNjUyMH0.NKjFb74yjwA8V3jct6UQXJ3uX7dvxQjpTNBEGlpoUTQ';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
         // State
         let studentsList = [];
         let educationalBase = [];
@@ -879,30 +872,17 @@
             document.getElementById('current-date-display').textContent = dateStr;
         }
 
-        async function loadInitialData() {
-            try {
-                const { data: students, error: errS } = await _supabase.from('estudiantes').select('nombre');
-                const { data: edu, error: errE } = await _supabase.from('base_educativa').select('*');
-                const { data: thermo, error: errT } = await _supabase.from('base_terapeutica').select('*');
-                
-                // Fetch unique contents from previous records
-                const { data: contentsData, error: errC } = await _supabase.from('registros').select('contenido');
-
-                if (errS || errE || errT) throw (errS || errE || errT);
-                
-                // Extract unique contents, filtering out nulls
-                const uniqueContents = [...new Set(contentsData ? contentsData.map(c => c.contenido).filter(Boolean) : [])];
-
-                populateFields({
-                    students: students.map(s => s.nombre),
-                    educational: edu,
-                    therapeutic: thermo,
-                    contents: uniqueContents
-                });
-            } catch (err) {
-                console.warn('Note: if "contenido" column is missing in DB, fetching contents might fail. This is normal if this is a first-time setup.', err);
-                // Continue with whatever succeeded
-                Swal.fire({ icon: 'error', title: 'Error de Sincronización', text: err.message, background: '#fff', borderRadius: '1.5rem' });
+                function loadInitialData() {
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run.withSuccessHandler((data) => {
+                    // Extract contents from educational items if they have it, or just empty list as Code.gs doesn't send unique contents natively
+                    data.contents = [];
+                    populateFields(data);
+                }).withFailureHandler(err => {
+                    Swal.fire({ icon: 'error', title: 'Error', text: err.message });
+                }).getData();
+            } else {
+                console.log('Running locally, mocking data');
             }
         }
 
@@ -1183,44 +1163,36 @@
             renderTempTable();
         }
 
-        async function saveSession() {
+                function saveSession() {
             if (currentSession.length === 0) return;
 
             Swal.fire({
                 title: 'Sincronizando...',
-                text: 'Guardando datos en Supabase',
+                text: 'Guardando datos en Google Sheets...',
                 allowOutsideClick: false,
                 background: '#fff',
                 borderRadius: '1.5rem',
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            try {
-                const toInsert = currentSession.map(r => ({
-                    id_sesion: r.idSesion,
-                    fecha_sesion: r.fechaSesion,
-                    estudiante: r.estudiante,
-                    tipo_registro: r.tipoRegistro,
-                    grado: r.grado,
-                    materia: r.materia,
-                    contenido: r.contenido,
-                    ocp: r.ocp,
-                    uac: parseInt(r.uac) || 0,
-                    uai: parseInt(r.uai) || 0,
-                    nivel_ayuda: r.nivelAyuda,
-                    reforzador: r.reforzador,
-                    programa_reforzamiento: r.programaReforzamiento
-                }));
+            // Combine contenido & ocp to avoid breaking Google Sheets column positions
+            const recordsToSave = currentSession.map(r => {
+                let finalOcp = r.ocp || '';
+                if (r.contenido && r.contenido !== '-') {
+                    finalOcp = r.contenido + ' - ' + finalOcp;
+                }
+                return { ...r, ocp: finalOcp };
+            });
 
-                const { error } = await _supabase.from('registros').insert(toInsert);
-                if (error) throw error;
-
-                Swal.fire({ icon: 'success', title: '¡Hecho!', text: 'Sesión guardada y sincronizada correctamente.', borderRadius: '1.5rem' });
-                currentSession = [];
-                renderTempTable();
-                sessionId = 'SES-' + Date.now();
-            } catch (err) {
-                Swal.fire({ icon: 'error', title: 'Error servidor', text: err.message, borderRadius: '1.5rem' });
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run.withSuccessHandler((res) => {
+                    Swal.fire({ icon: 'success', title: '¡Hecho!', text: 'Sesión guardada y sincronizada correctamente.', borderRadius: '1.5rem' });
+                    currentSession = [];
+                    renderTempTable();
+                    sessionId = 'SES-' + Date.now();
+                }).withFailureHandler((err) => {
+                    Swal.fire({ icon: 'error', title: 'Error servidor', text: err.message, borderRadius: '1.5rem' });
+                }).saveSession(recordsToSave);
             }
         }
 
@@ -1283,85 +1255,75 @@
             });
         }
 
-        async function updateDashboardFilter() {
+                function updateDashboardFilter() {
             const student = document.getElementById('dash-student').value;
             const program = document.getElementById('dash-program').value;
             const start = document.getElementById('dash-start').value;
             const end = document.getElementById('dash-end').value;
 
             if (!student) return;
+            Swal.showLoading();
 
-            try {
-                let query = _supabase.from('registros').select('*').eq('estudiante', student);
-                if (program && program !== "Todos") query = query.eq('materia', program);
-                if (start) query = query.gte('fecha_sesion', start);
-                if (end) query = query.lte('fecha_sesion', end);
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run.withSuccessHandler((res) => {
+                    Swal.close();
+                    if (res.error) {
+                        Swal.fire('Error', res.error, 'error');
+                        return;
+                    }
+                    const data = res.records;
+                    
+                    if (!data || data.length === 0) {
+                        Swal.fire({ icon: 'info', title: 'Sin datos', text: 'No se encontraron registros para este filtro.', timer: 2000, showConfirmButton: false });
+                        chartInstance.data.labels = [];
+                        chartInstance.data.datasets[0].data = [];
+                        chartInstance.data.datasets[1].data = [];
+                        chartInstance.update();
+                        return;
+                    }
 
-                const { data, error } = await query.order('fecha_sesion', { ascending: true });
-                if (error) {
-                    console.error("Supabase Error:", error);
-                    return;
-                }
+                    // records format: [Timestamp, ID_Sesion, Fecha (C), Estudiante (D), Tipo (E), Grado (F), Materia (G), OCP (H), UAC (I), UAI (J)...]
+                    const labels = data.map(r => {
+                        const d = r[2] instanceof Date ? r[2] : new Date(r[2]);
+                        return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                    });
 
-                if (!data || data.length === 0) {
-                    Swal.fire({ icon: 'info', title: 'Sin datos', text: 'No se encontraron registros para este filtro.', timer: 2000, showConfirmButton: false });
-                    chartInstance.data.labels = [];
-                    chartInstance.data.datasets[0].data = [];
-                    chartInstance.data.datasets[1].data = [];
+                    chartInstance.data.labels = labels;
+                    chartInstance.data.datasets[0].data = data.map(r => parseFloat(r[8]) || 0); // UAC is col I (index 8)
+                    chartInstance.data.datasets[1].data = data.map(r => parseFloat(r[9]) || 0); // UAI is col J (index 9)
                     chartInstance.update();
-                    return;
-                }
 
-                const labels = data.map(r => {
-                    const d = new Date(r.fecha_sesion);
-                    // Force UTC to avoid timezone shifts in labels
-                    const utcDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
-                    return utcDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-                });
-
-                chartInstance.data.labels = labels;
-                chartInstance.data.datasets[0].data = data.map(r => parseFloat(r.uac));
-                chartInstance.data.datasets[1].data = data.map(r => parseFloat(r.uai));
-                chartInstance.update();
-
-                loadRecommendations(student);
-            } catch (err) {
-                console.error("Dashboard Error:", err);
+                    renderRecommendationsFromGS(res.recommendations);
+                }).withFailureHandler((err) => {
+                    Swal.fire('Error', err.message, 'error');
+                }).getDashboardData(student, start, end, program);
             }
         }
-
-        async function loadRecommendations(student) {
+        
+        function renderRecommendationsFromGS(recs) {
             const list = document.getElementById('rec-list');
-            list.innerHTML = '<div class="flex justify-center py-4"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-corp-primary"></div></div>';
-
-            try {
-                const { data, error } = await _supabase.from('recomendaciones').select('*').eq('estudiante', student).order('created_at', { ascending: false });
-                if (error) throw error;
-
-                list.innerHTML = '';
-                if (data.length === 0) {
-                    list.innerHTML = '<p class="text-xs text-center text-gray-400 py-8">Sin notas para este estudiante.</p>';
-                    return;
-                }
-
-                data.forEach(r => {
-                    const li = document.createElement('li');
-                    li.className = 'bg-gray-50 p-4 rounded-2xl border-l-4 border-corp-primary shadow-sm';
-                    li.innerHTML = `
-                        <div class="flex justify-between items-start mb-1">
-                            <span class="text-[10px] font-black uppercase text-corp-primary">${r.supervisora}</span>
-                            <span class="text-[9px] text-gray-400">${new Date(r.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <p class="text-sm font-medium text-gray-700">${r.recomendacion}</p>
-                    `;
-                    list.appendChild(li);
-                });
-            } catch (err) {
-                console.error(err);
+            list.innerHTML = '';
+            if (!recs || recs.length === 0) {
+                list.innerHTML = '<p class="text-xs text-center text-gray-400 py-8">Sin notas para este estudiante.</p>';
+                return;
             }
+
+            recs.forEach(r => {
+                const li = document.createElement('li');
+                li.className = 'bg-gray-50 p-4 rounded-2xl border-l-4 border-corp-primary shadow-sm';
+                const d = r[0] instanceof Date ? r[0] : new Date(r[0]);
+                li.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[10px] font-black uppercase text-corp-primary">${r[2] || 'Supervisora'}</span>
+                        <span class="text-[9px] text-gray-400">${d.toLocaleDateString()}</span>
+                    </div>
+                    <p class="text-sm font-medium text-gray-700">${r[3]}</p>
+                `;
+                list.appendChild(li);
+            });
         }
 
-        async function saveRecommendation() {
+                function saveRecommendation() {
             const text = document.getElementById('recommendation-text').value;
             const student = document.getElementById('dash-student').value;
             const supervisor = document.getElementById('supervisor-name').value;
@@ -1371,15 +1333,13 @@
                 return;
             }
 
-            try {
-                const { error } = await _supabase.from('recomendaciones').insert([{ estudiante: student, supervisora: supervisor, recomendacion: text }]);
-                if (error) throw error;
-
-                document.getElementById('recommendation-text').value = '';
-                Swal.fire({ icon: 'success', title: 'Nota Guardada', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
-                loadRecommendations(student);
-            } catch (err) {
-                Swal.fire('Error', err.message, 'error');
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run.withSuccessHandler((res) => {
+                    document.getElementById('recommendation-text').value = '';
+                    Swal.fire({ icon: 'success', title: 'Nota Guardada', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                    // To refresh notes, we can trigger the dash update
+                    updateDashboardFilter();
+                }).saveRecommendation(student, text, supervisor);
             }
         }
     </script>
