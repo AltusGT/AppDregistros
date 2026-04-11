@@ -872,14 +872,18 @@
             document.getElementById('current-date-display').textContent = dateStr;
         }
 
-                function loadInitialData() {
+                        function loadInitialData() {
             if (typeof google !== 'undefined' && google.script && google.script.run) {
                 google.script.run.withSuccessHandler((data) => {
-                    // Extract contents from educational items if they have it, or just empty list as Code.gs doesn't send unique contents natively
-                    data.contents = [];
-                    populateFields(data);
+                    try {
+                        if (!data) throw new Error("Data from Google Sheets is null or undefined");
+                        data.contents = [];
+                        populateFields(data);
+                    } catch (e) {
+                        Swal.fire({ icon: 'error', title: 'Client Error', text: e.message });
+                    }
                 }).withFailureHandler(err => {
-                    Swal.fire({ icon: 'error', title: 'Error', text: err.message });
+                    Swal.fire({ icon: 'error', title: 'Server Error', text: err.message || err.toString() });
                 }).getData();
             } else {
                 console.log('Running locally, mocking data');
