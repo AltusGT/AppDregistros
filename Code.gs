@@ -101,18 +101,19 @@ function getData() {
   }
 
   // Get Therapeutic Base - Try common variations
-    let theraSheet = ss.getSheetByName('Base_Terapeutica') 
+  let theraSheet = ss.getSheetByName('Base_Terapeutica') 
                 || ss.getSheetByName('Base Terapeutica') 
                 || ss.getSheetByName('Base_Terapéutica')
                 || ss.getSheetByName('Base Terapéutica');
   
   let therapeutic = [];
   if (theraSheet && theraSheet.getLastRow() > 1) {
-    // Get all values from Col A (Row 2 to End)
-    // Using flat().filter(String) to remove empty rows
-    therapeutic = theraSheet.getRange(2, 1, theraSheet.getLastRow() - 1, 1)
-                  .getValues().flat()
-                  .filter(cell => cell !== "" && cell !== null);
+    // Get Cols A & B (Programa, OCP)
+    const theraData = theraSheet.getRange(2, 1, theraSheet.getLastRow() - 1, 2).getValues();
+    therapeutic = theraData.map(row => ({
+      programa: row[0],
+      ocp: row[1] || ''
+    })).filter(item => item.programa);
   }
 
   return {

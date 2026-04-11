@@ -946,7 +946,7 @@
             // Dash Programs
             const dashProg = document.getElementById('dash-program');
             dashProg.innerHTML = '<option value="">Todos</option>';
-            const allPrograms = new Set([...educationalBase.map(e => e.materia), ...therapeuticBase.map(t => t.Programa || t.programa)]);
+            const allPrograms = new Set([...educationalBase.map(e => e.materia), ...therapeuticBase.map(t => typeof t === 'object' ? (t.Programa || t.programa) : t)]);
             [...allPrograms].sort().forEach(p => dashProg.add(new Option(p, p)));
         }
 
@@ -1015,7 +1015,7 @@
             if (list.options.length > 0) return;
 
             // Get unique programs
-            const programs = [...new Set(therapeuticBase.map(t => t.Programa || t.programa).filter(Boolean))].sort();
+            const programs = [...new Set(therapeuticBase.map(t => typeof t === 'object' ? (t.Programa || t.programa) : t).filter(Boolean))].sort();
             programs.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p;
@@ -1043,7 +1043,7 @@
             ocpInput.placeholder = 'Escriba o seleccione criterio...';
             ocpInput.classList.remove('opacity-50', 'border-dashed');
 
-            const matches = therapeuticBase.filter(t => (t.Programa || t.programa) === program);
+            const matches = therapeuticBase.filter(t => (typeof t === 'object' ? (t.Programa || t.programa) : t) === program);
             if (matches.length > 0) {
                 matches.forEach(m => {
                     if (m.ocp) {
