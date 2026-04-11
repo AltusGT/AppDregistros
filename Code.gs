@@ -15,7 +15,7 @@ function include(filename) {
  * Debug: Inspect Database Content
  */
 function inspectDatabase() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById('1hya8pmWDqWDmciTxn0XPskILffKvxB8pwwV6izA10Ro');
   const sheet = ss.getSheetByName('Registros');
   if (!sheet) return { error: 'No existe la hoja Registros' };
   
@@ -49,7 +49,7 @@ function inspectDatabase() {
  * Returns an object: { students: [], educational: [], therapeutic: [] }
  */
 function getData() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById('1hya8pmWDqWDmciTxn0XPskILffKvxB8pwwV6izA10Ro');
   
   // Get Students
   const studentsSheet = ss.getSheetByName('Estudiantes');
@@ -96,7 +96,7 @@ function getData() {
  * Saves a session (array of records) to the 'Registros' sheet.
  */
 function saveSession(records) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById('1hya8pmWDqWDmciTxn0XPskILffKvxB8pwwV6izA10Ro');
   const sheet = ss.getSheetByName('Registros');
   if (!sheet) throw new Error('Hoja "Registros" no encontrada.');
 
@@ -131,7 +131,7 @@ function saveSession(records) {
  */
 function getDashboardData(studentName, startDateStr, endDateStr, program) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById('1hya8pmWDqWDmciTxn0XPskILffKvxB8pwwV6izA10Ro');
     const regSheet = ss.getSheetByName('Registros');
     const recSheet = ss.getSheetByName('Recomendaciones');
     
@@ -231,7 +231,7 @@ function getDashboardData(studentName, startDateStr, endDateStr, program) {
  * Saves a recommendation.
  */
 function saveRecommendation(student, recommendation, supervisor) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById('1hya8pmWDqWDmciTxn0XPskILffKvxB8pwwV6izA10Ro');
   const sheet = ss.getSheetByName('Recomendaciones');
   if (!sheet) return { success: false, message: 'Hoja "Recomendaciones" no encontrada' };
   
