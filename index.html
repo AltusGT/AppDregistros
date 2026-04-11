@@ -21,6 +21,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQqFTFFUGkU10cUC9vXBlnq7xQ2FvyKZVE4TdNcGMIbpIpE8mL527NV34f-VlYgfwEDQ/exec";
+
         tailwind.config = {
             theme: {
                 extend: {
@@ -888,17 +890,29 @@
             document.getElementById('current-date-display').textContent = dateStr;
         }
 
-        function loadInitialData() {
+                async function loadInitialData() {
             if (typeof google !== 'undefined' && google.script && google.script.run) {
                 google.script.run.withSuccessHandler((data) => {
-                    // Extract contents from educational items if they have it, or just empty list as Code.gs doesn't send unique contents natively
-                    data.contents = [];
-                    populateFields(data);
+                    try {
+                        if (!data) throw new Error("Data from Google Sheets is null or undefined");
+                        data.contents = [];
+                        populateFields(data);
+                    } catch (e) {
+                        Swal.fire({ icon: 'error', title: 'Client Error', text: e.message });
+                    }
                 }).withFailureHandler(err => {
-                    Swal.fire({ icon: 'error', title: 'Error', text: err.message });
+                    Swal.fire({ icon: 'error', title: 'Server Error', text: err.message || err.toString() });
                 }).getData();
             } else {
-                console.log('Running locally, mocking data');
+                // FETCH FROM GITHUB PAGES
+                try {
+                    const res = await fetch(`${SCRIPT_URL}?api=true&action=getData`);
+                    const data = await res.json();
+                    data.contents = [];
+                    populateFields(data);
+                } catch(e) {
+                    Swal.fire('Error', 'Error conectando al servidor Apps Script. Revisa que el enlace sea correcto y público.', 'error');
+                }
             }
         }
 
@@ -1179,7 +1193,7 @@
             renderTempTable();
         }
 
-        function saveSession() {
+                async function saveSession() {
             if (currentSession.length === 0) return;
 
             Swal.fire({
@@ -1191,7 +1205,6 @@
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            // Combine contenido & ocp to avoid breaking Google Sheets column positions
             const recordsToSave = currentSession.map(r => {
                 let finalOcp = r.ocp || '';
                 if (r.contenido && r.contenido !== '-') {
@@ -1202,13 +1215,24 @@
 
             if (typeof google !== 'undefined' && google.script && google.script.run) {
                 google.script.run.withSuccessHandler((res) => {
-                    Swal.fire({ icon: 'success', title: '¡Hecho!', text: 'Sesión guardada y sincronizada correctamente.', borderRadius: '1.5rem' });
-                    currentSession = [];
-                    renderTempTable();
-                    sessionId = 'SES-' + Date.now();
+                    Swal.fire({ icon: 'success', title: '¡Hecho!', text: 'Sesión guardada correctamente.', borderRadius: '1.5rem' });
+                    currentSession = []; renderTempTable(); sessionId = 'SES-' + Date.now();
                 }).withFailureHandler((err) => {
-                    Swal.fire({ icon: 'error', title: 'Error servidor', text: err.message, borderRadius: '1.5rem' });
+                    Swal.fire({ icon: 'error', title: 'Error', text: err.message, borderRadius: '1.5rem' });
                 }).saveSession(recordsToSave);
+            } else {
+                try {
+                    const res = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'saveSession', records: recordsToSave })
+                    });
+                    const d = await res.json();
+                    if(d.error) throw new Error(d.error);
+                    Swal.fire({ icon: 'success', title: '¡Hecho!', text: 'Sesión guardada correctamente.', borderRadius: '1.5rem' });
+                    currentSession = []; renderTempTable(); sessionId = 'SES-' + Date.now();
+                } catch(e) {
+                    Swal.fire('Error', e.message, 'error');
+                }
             }
         }
 
@@ -1271,7 +1295,7 @@
             });
         }
 
-        function updateDashboardFilter() {
+                async function updateDashboardFilter() {
             const student = document.getElementById('dash-student').value;
             const program = document.getElementById('dash-program').value;
             const start = document.getElementById('dash-start').value;
@@ -1281,39 +1305,36 @@
             Swal.showLoading();
 
             if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run.withSuccessHandler((res) => {
-                    Swal.close();
-                    if (res.error) {
-                        Swal.fire('Error', res.error, 'error');
-                        return;
-                    }
-                    const data = res.records;
-
-                    if (!data || data.length === 0) {
-                        Swal.fire({ icon: 'info', title: 'Sin datos', text: 'No se encontraron registros para este filtro.', timer: 2000, showConfirmButton: false });
-                        chartInstance.data.labels = [];
-                        chartInstance.data.datasets[0].data = [];
-                        chartInstance.data.datasets[1].data = [];
-                        chartInstance.update();
-                        return;
-                    }
-
-                    // records format: [Timestamp, ID_Sesion, Fecha (C), Estudiante (D), Tipo (E), Grado (F), Materia (G), OCP (H), UAC (I), UAI (J)...]
-                    const labels = data.map(r => {
-                        const d = r[2] instanceof Date ? r[2] : new Date(r[2]);
-                        return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-                    });
-
-                    chartInstance.data.labels = labels;
-                    chartInstance.data.datasets[0].data = data.map(r => parseFloat(r[8]) || 0); // UAC is col I (index 8)
-                    chartInstance.data.datasets[1].data = data.map(r => parseFloat(r[9]) || 0); // UAI is col J (index 9)
-                    chartInstance.update();
-
-                    renderRecommendationsFromGS(res.recommendations);
-                }).withFailureHandler((err) => {
-                    Swal.fire('Error', err.message, 'error');
-                }).getDashboardData(student, start, end, program);
+                google.script.run.withSuccessHandler(res => handleDashboardRes(res))
+                  .withFailureHandler(err => Swal.fire('Error', err.message, 'error'))
+                  .getDashboardData(student, start, end, program);
+            } else {
+                try {
+                    const url = `${SCRIPT_URL}?api=true&action=getDashboardData&student=${encodeURIComponent(student)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&program=${encodeURIComponent(program)}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    handleDashboardRes(data);
+                } catch(e) {
+                    Swal.fire('Error', e.message, 'error');
+                }
             }
+        }
+
+        function handleDashboardRes(res) {
+            Swal.close();
+            if (res.error) return Swal.fire('Error', res.error, 'error');
+            const data = res.records;
+            if (!data || data.length === 0) {
+                Swal.fire({ icon: 'info', title: 'Sin datos', text: 'No hay registros', timer: 2000, showConfirmButton: false });
+                chartInstance.data.labels = []; chartInstance.data.datasets[0].data = []; chartInstance.data.datasets[1].data = []; chartInstance.update();
+                renderRecommendationsFromGS(res.recommendations);
+                return;
+            }
+            chartInstance.data.labels = data.map(r => new Date(r[2]).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }));
+            chartInstance.data.datasets[0].data = data.map(r => parseFloat(r[8]) || 0);
+            chartInstance.data.datasets[1].data = data.map(r => parseFloat(r[9]) || 0);
+            chartInstance.update();
+            renderRecommendationsFromGS(res.recommendations);
         }
 
         function renderRecommendationsFromGS(recs) {
@@ -1339,23 +1360,28 @@
             });
         }
 
-        function saveRecommendation() {
+                async function saveRecommendation() {
             const text = document.getElementById('recommendation-text').value;
             const student = document.getElementById('dash-student').value;
             const supervisor = document.getElementById('supervisor-name').value;
-
-            if (!text || !student || !supervisor) {
-                Swal.fire({ icon: 'warning', title: 'Faltan datos', text: 'Estudiante, Supervisora y Texto son obligatorios.' });
-                return;
-            }
+            if (!text || !student || !supervisor) return Swal.fire('Faltan datos', '', 'warning');
 
             if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run.withSuccessHandler((res) => {
+                google.script.run.withSuccessHandler(() => {
                     document.getElementById('recommendation-text').value = '';
                     Swal.fire({ icon: 'success', title: 'Nota Guardada', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
-                    // To refresh notes, we can trigger the dash update
                     updateDashboardFilter();
                 }).saveRecommendation(student, text, supervisor);
+            } else {
+                try {
+                    const res = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'saveRecommendation', student, text, supervisor })
+                    });
+                    document.getElementById('recommendation-text').value = '';
+                    Swal.fire({ icon: 'success', title: 'Nota Guardada', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                    updateDashboardFilter();
+                } catch(e) { Swal.fire('Error', e.message, 'error'); }
             }
         }
     </script>

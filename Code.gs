@@ -1,10 +1,39 @@
-function doGet() {
+function doGet(e) {
+  if (e && e.parameter && e.parameter.api === 'true') {
+     if (e.parameter.action === 'getData') {
+        const data = getData();
+        return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+     }
+     if (e.parameter.action === 'getDashboardData') {
+        const data = getDashboardData(e.parameter.student, e.parameter.start, e.parameter.end, e.parameter.program);
+        return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+     }
+  }
+
+  // Si no es API, carga la vista HTML normal
   return HtmlService.createTemplateFromFile('index')
       .evaluate()
       .setTitle('ALTUS - Registro Educativo y Terapéutico')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
+
+function doPost(e) {
+  try {
+    const payload = JSON.parse(e.postData.contents);
+    if (payload.action === 'saveSession') {
+      const res = saveSession(payload.records);
+      return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
+    }
+    if (payload.action === 'saveRecommendation') {
+      const res = saveRecommendation(payload.student, payload.text, payload.supervisor);
+      return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch(error) {
+    return ContentService.createTextOutput(JSON.stringify({ error: error.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename)
@@ -72,9 +101,10 @@ function getData() {
   }
 
   // Get Therapeutic Base - Try common variations
-  let theraSheet = ss.getSheetByName('Base_Terapeutica');
-  if (!theraSheet) theraSheet = ss.getSheetByName('Base Terapeutica');
-  if (!theraSheet) theraSheet = ss.getSheetByName('Base_Terapéutica');
+    let theraSheet = ss.getSheetByName('Base_Terapeutica') 
+                || ss.getSheetByName('Base Terapeutica') 
+                || ss.getSheetByName('Base_Terapéutica')
+                || ss.getSheetByName('Base Terapéutica');
   
   let therapeutic = [];
   if (theraSheet && theraSheet.getLastRow() > 1) {
