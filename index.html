@@ -592,38 +592,32 @@
                         <div id="therapeutic-fields" class="hidden animate__animated animate__fadeIn">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="relative">
-                                    <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Programa
-                                        Terapéutico</label>
+                                    <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Programa Terapéutico</label>
                                     <div class="relative">
-                                        <input list="programa-terapeutico-list" id="programa-terapeutico"
-                                            placeholder="Escriba o seleccione programa..."
-                                            class="input-premium w-full text-sm font-bold pr-10">
-                                        <datalist id="programa-terapeutico-list"></datalist>
-                                        <div
-                                            class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
+                                        <select id="programa-terapeutico" class="input-premium w-full text-sm font-bold pr-10">
+                                            <option value="">Seleccione programa...</option>
+                                            <!-- Dynamic -->
+                                        </select>
+                                        <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                                    d="M19 9l-7 7-7-7"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
                                             </svg>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="relative">
-                                    <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Criterio / OCP
-                                        (Terapéutico)</label>
+                                    <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">OCP (Terapéutico)</label>
                                     <div class="relative">
-                                        <input list="ocp-terapeutico-list" id="ocp-terapeutico"
-                                            placeholder="Escriba o seleccione..."
+                                        <select id="ocp-terapeutico" 
                                             class="input-premium w-full text-sm font-bold border-dashed opacity-50 transition-all pr-10"
                                             disabled>
-                                        <div
-                                            class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                            <option value="">Primero seleccione programa</option>
+                                        </select>
+                                        <div class="absolute right-4 top-1/2 -translate-y-[2px] pointer-events-none text-gray-400">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                                    d="M19 9l-7 7-7-7"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
                                             </svg>
                                         </div>
-                                        <datalist id="ocp-terapeutico-list"></datalist>
                                     </div>
                                 </div>
                             </div>
@@ -1014,43 +1008,72 @@
         }
 
         function loadTherapeuticPrograms() {
-            const list = document.getElementById('programa-terapeutico-list');
-            if (!list) return;
+            const select = document.getElementById('programa-terapeutico');
+            if (!select) return;
             
-            // Clear existing options
-            list.innerHTML = '';
+            // Keep the first option
+            select.innerHTML = '<option value="">Seleccione programa...</option>';
 
             // Get unique programs
             const programs = [...new Set(therapeuticBase.map(t => typeof t === 'object' ? (t.Programa || t.programa) : t).filter(Boolean))].sort();
             
-            if (programs.length === 0) return;
-
             programs.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p;
-                list.appendChild(opt);
+                opt.textContent = p;
+                select.appendChild(opt);
             });
-            console.log("Therapeutic programs loaded:", programs.length);
+
+            // Add manual entry option at the end
+            const manualOpt = document.createElement('option');
+            manualOpt.value = "MANUAL";
+            manualOpt.textContent = "➕ [ Otro / Escribir manualmente ]";
+            manualOpt.style.color = "var(--primary)";
+            manualOpt.style.fontWeight = "bold";
+            select.appendChild(manualOpt);
+
+            console.log("Therapeutic programs loaded into select:", programs.length);
         }
 
         function updateOCPTerapeutico() {
-            const program = document.getElementById('programa-terapeutico').value.trim();
-            const ocpInput = document.getElementById('ocp-terapeutico');
-            const ocpList = document.getElementById('ocp-terapeutico-list');
+            const select = document.getElementById('programa-terapeutico');
+            let program = select.value.trim();
+            const ocpSelect = document.getElementById('ocp-terapeutico');
 
-            ocpList.innerHTML = '';
-
-            if (!program) {
-                ocpInput.disabled = true;
-                ocpInput.placeholder = 'Primero seleccione programa';
-                ocpInput.classList.add('opacity-50', 'border-dashed');
+            if (program === "MANUAL") {
+                Swal.fire({
+                    title: 'Nuevo Programa',
+                    input: 'text',
+                    inputLabel: 'Nombre del programa terapéutico',
+                    placeholder: 'Escriba el nombre aquí...',
+                    confirmButtonText: 'Aceptar',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed && result.value) {
+                        const newName = result.value.trim();
+                        // Add temporarily to the select
+                        const newOpt = new Option(newName, newName, true, true);
+                        select.add(newOpt, select.options[select.options.length - 1]);
+                        updateOCPTerapeutico();
+                    } else {
+                        select.value = "";
+                        updateOCPTerapeutico();
+                    }
+                });
                 return;
             }
 
-            // Always enable to allow manual entry once program is selected
-            ocpInput.disabled = false;
-            ocpInput.placeholder = 'Escriba o seleccione criterio...';
-            ocpInput.classList.remove('opacity-50', 'border-dashed');
+            ocpSelect.innerHTML = '<option value="">Seleccione OCP...</option>';
+
+            if (!program) {
+                ocpSelect.disabled = true;
+                ocpSelect.classList.add('opacity-50', 'border-dashed');
+                return;
+            }
+
+            ocpSelect.disabled = false;
+            ocpSelect.classList.remove('opacity-50', 'border-dashed');
 
             const targetProgram = program.toLowerCase();
             const matches = therapeuticBase.filter(t => {
@@ -1062,12 +1085,36 @@
                 matches.forEach(m => {
                     const ocpVal = typeof m === 'object' ? (m.OCP || m.ocp) : null;
                     if (ocpVal) {
-                        const opt = document.createElement('option');
-                        opt.value = ocpVal;
-                        ocpList.appendChild(opt);
+                        const opt = new Option(ocpVal, ocpVal);
+                        ocpSelect.add(opt);
                     }
                 });
             }
+
+            // Add manual OCP option
+            const manualOcp = new Option("➕ [ Escribir otro criterio... ]", "MANUAL");
+            manualOcp.style.color = "var(--primary)";
+            ocpSelect.add(manualOcp);
+            
+            // Listener for Manual OCP
+            ocpSelect.onchange = () => {
+                if (ocpSelect.value === "MANUAL") {
+                    Swal.fire({
+                        title: 'Nuevo Criterio / OCP',
+                        input: 'text',
+                        confirmButtonText: 'Aceptar',
+                        showCancelButton: true
+                    }).then(res => {
+                        if (res.isConfirmed && res.value) {
+                            const val = res.value.trim();
+                            const opt = new Option(val, val, true, true);
+                            ocpSelect.add(opt, ocpSelect.options[ocpSelect.options.length - 1]);
+                        } else {
+                            ocpSelect.value = "";
+                        }
+                    });
+                }
+            };
         }
 
         function updateOCP() {
