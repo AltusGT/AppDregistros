@@ -287,8 +287,8 @@
             }
 
             /* Fix grids and flex containers */
-            .grid,
-            [class*="grid-cols-"] {
+            .grid:not(.hidden),
+            [class*="grid-cols-"]:not(.hidden) {
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 1.25rem !important;
