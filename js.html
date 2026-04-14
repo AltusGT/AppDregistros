@@ -67,7 +67,7 @@
 
         const allPrograms = new Set();
         educationalBase.forEach(e => allPrograms.add(e.materia));
-        therapeuticBase.forEach(t => allPrograms.add(t));
+        therapeuticBase.forEach(t => allPrograms.add(t.programa));
 
         [...allPrograms].sort().forEach(p => {
             const opt = document.createElement('option');
@@ -88,6 +88,58 @@
             } else {
                 document.getElementById('educational-fields').classList.remove('hidden');
                 document.getElementById('therapeutic-fields').classList.add('hidden');
+            }
+        });
+
+        // Programa Terapeutico Change Logic
+        document.getElementById('programa-terapeutico').addEventListener('change', (e) => {
+            if (e.target.value === '_NEW_') {
+                Swal.fire({
+                    title: 'Nuevo Programa Terapéutico',
+                    input: 'text',
+                    inputLabel: 'Nombre del programa',
+                    inputPlaceholder: 'Escriba el nombre aquí...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#385da9',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return '¡Debe escribir un nombre!';
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const newProg = result.value;
+                        Swal.showLoading();
+                        if (typeof google !== 'undefined' && google.script && google.script.run) {
+                            google.script.run.withSuccessHandler((res) => {
+                                Swal.close();
+                                Swal.fire('Guardado', res.message, 'success');
+                                // Actualizar localmente
+                                therapeuticBase.push({ programa: newProg, ocp: '-' });
+                                const sel = document.getElementById('programa-terapeutico');
+                                // Re-cargar dropdown para que aparezca el nuevo y mantenga el "Agregar" al final
+                                sel.innerHTML = '<option value="">Seleccione programa...</option>';
+                                loadTherapeuticPrograms(true); // Force reload
+                                sel.value = newProg;
+                            }).addNewTherapeuticProgram(newProg);
+                        } else {
+                            // Mock local
+                            setTimeout(() => {
+                                Swal.fire('Guardado', '(Simulacro) Programa añadido: ' + newProg, 'success');
+                                therapeuticBase.push({ programa: newProg, ocp: '-' });
+                                const sel = document.getElementById('programa-terapeutico');
+                                sel.innerHTML = '<option value="">Seleccione programa...</option>';
+                                loadTherapeuticPrograms(true);
+                                sel.value = newProg;
+                            }, 1000);
+                        }
+                    } else {
+                        // Volver a limpiar seleccion si cancela
+                        e.target.value = "";
+                    }
+                });
             }
         });
 
@@ -127,16 +179,23 @@
         document.getElementById('btn-save-rec').addEventListener('click', saveRecommendation);
     }
 
-    function loadTherapeuticPrograms() {
+    function loadTherapeuticPrograms(force = false) {
         const sel = document.getElementById('programa-terapeutico');
-        if (sel.options.length > 1) return; // Already loaded
+        if (sel.options.length > 1 && !force) return; // Already loaded
 
         therapeuticBase.forEach(p => {
             const opt = document.createElement('option');
-            opt.value = p;
-            opt.textContent = p;
+            opt.value = p.programa;
+            opt.textContent = p.programa;
             sel.appendChild(opt);
         });
+
+        const newOpt = document.createElement('option');
+        newOpt.value = "_NEW_";
+        newOpt.textContent = "➕ AGREGAR UN PROGRAMA NUEVO";
+        newOpt.style.fontWeight = "bold";
+        newOpt.style.color = "#385da9";
+        sel.appendChild(newOpt);
     }
 
     function updateOCP() {

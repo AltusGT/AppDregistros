@@ -275,3 +275,30 @@ function saveRecommendation(student, recommendation, supervisor) {
   ]);
   return { success: true };
 }
+
+/**
+ * Añade un nuevo programa a la pestaña Base_Terapeutica.
+ */
+function addNewTherapeuticProgram(programName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById('1hya8pmWDqWDmciTxn0XPskILffKvxB8pwwV6izA10Ro');
+  let theraSheet = ss.getSheetByName('Base_Terapeutica') 
+                || ss.getSheetByName('Base Terapeutica') 
+                || ss.getSheetByName('Base_Terapéutica')
+                || ss.getSheetByName('Base Terapéutica');
+  
+  if (!theraSheet) {
+    theraSheet = ss.insertSheet('Base_Terapeutica');
+    theraSheet.appendRow(['Programa', 'OCP']);
+  }
+  
+  const data = theraSheet.getDataRange().getValues();
+  // Verificar si ya existe
+  const exists = data.some(row => row[0].toString().trim().toLowerCase() === programName.trim().toLowerCase());
+  
+  if (!exists) {
+    theraSheet.appendRow([programName, '-']);
+    return { success: true, message: 'Programa "' + programName + '" añadido correctamente.' };
+  } else {
+    return { success: true, message: 'El programa "' + programName + '" ya existe.' };
+  }
+}
