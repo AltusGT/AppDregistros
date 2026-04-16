@@ -1092,8 +1092,12 @@
                 matches.forEach(m => {
                     const ocpVal = m.ocp || m.OCP;
                     if (ocpVal && ocpVal !== '-') {
-                        const opt = new Option(ocpVal, ocpVal);
-                        ocpSelect.add(opt);
+                        // Separar por punto y coma (;) o saltos de línea para listar individualmente
+                        const partes = String(ocpVal).split(/[\n;]/).map(s => s.trim()).filter(Boolean);
+                        partes.forEach(parte => {
+                            const opt = new Option(parte, parte);
+                            ocpSelect.add(opt);
+                        });
                     }
                 });
             }
