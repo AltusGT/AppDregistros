@@ -31,7 +31,11 @@
                     { grado: '3º', materia: 'Matemáticas', ocp: 'Resta simple' },
                     { grado: '1º', materia: 'Ciencia', ocp: 'Partes del cuerpo' }
                 ],
-                therapeutic: ['Control de Impulsos', 'Atención Conjunta', 'Habilidades Sociales']
+                therapeutic: [
+                    { programa: 'Control de Impulsos', criterios: ['Criterio 1', 'Criterio 2'] },
+                    { programa: 'Atención Conjunta', criterios: ['Mirada al nombre', 'Señalar'] },
+                    { programa: 'Habilidades Sociales', criterios: ['Turnos', 'Saludos'] }
+                ]
             };
             populateFields(mockData);
         }
@@ -93,6 +97,7 @@
 
         // Programa Terapeutico Change Logic
         document.getElementById('programa-terapeutico').addEventListener('change', (e) => {
+            updateOCPTerapeutico(e.target.value);
             if (e.target.value === '_NEW_') {
                 Swal.fire({
                     title: 'Nuevo Programa Terapéutico',
@@ -117,27 +122,30 @@
                                 Swal.close();
                                 Swal.fire('Guardado', res.message, 'success');
                                 // Actualizar localmente
-                                therapeuticBase.push({ programa: newProg, ocp: '-' });
+                                therapeuticBase.push({ programa: newProg, criterios: [] });
                                 const sel = document.getElementById('programa-terapeutico');
                                 // Re-cargar dropdown para que aparezca el nuevo y mantenga el "Agregar" al final
                                 sel.innerHTML = '<option value="">Seleccione programa...</option>';
                                 loadTherapeuticPrograms(true); // Force reload
                                 sel.value = newProg;
+                                updateOCPTerapeutico(newProg);
                             }).addNewTherapeuticProgram(newProg);
                         } else {
                             // Mock local
                             setTimeout(() => {
                                 Swal.fire('Guardado', '(Simulacro) Programa añadido: ' + newProg, 'success');
-                                therapeuticBase.push({ programa: newProg, ocp: '-' });
+                                therapeuticBase.push({ programa: newProg, criterios: [] });
                                 const sel = document.getElementById('programa-terapeutico');
                                 sel.innerHTML = '<option value="">Seleccione programa...</option>';
                                 loadTherapeuticPrograms(true);
                                 sel.value = newProg;
+                                updateOCPTerapeutico(newProg);
                             }, 1000);
                         }
                     } else {
                         // Volver a limpiar seleccion si cancela
                         e.target.value = "";
+                        updateOCPTerapeutico("");
                     }
                 });
             }
@@ -196,6 +204,30 @@
         newOpt.style.fontWeight = "bold";
         newOpt.style.color = "#385da9";
         sel.appendChild(newOpt);
+    }
+
+    function updateOCPTerapeutico(programaNombre) {
+        const ocpSel = document.getElementById('ocp-terapeutico');
+        ocpSel.innerHTML = '<option value="">Seleccione Criterio...</option>';
+        
+        if (!programaNombre || programaNombre === '_NEW_') {
+            ocpSel.disabled = true;
+            return;
+        }
+
+        const progData = therapeuticBase.find(p => p.programa === programaNombre);
+        if (progData && progData.criterios && progData.criterios.length > 0) {
+            ocpSel.disabled = false;
+            progData.criterios.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                ocpSel.appendChild(opt);
+            });
+        } else {
+            ocpSel.innerHTML = '<option value="">No hay criterios disponibles</option>';
+            ocpSel.disabled = true;
+        }
     }
 
     function updateOCP() {
@@ -267,7 +299,8 @@
         // Requirement says Col G is "Materia_Programa"
         if (isTherapeutic) {
             record.materia = record.programaTerapeutico; // Overwrite or map
-            record.ocp = '-';
+            const ocpT = document.getElementById('ocp-terapeutico').value;
+            record.ocp = ocpT ? ocpT : '-';
             record.grado = '-';
         }
 

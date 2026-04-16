@@ -100,20 +100,38 @@ function getData() {
     }));
   }
 
-  // Get Therapeutic Base - Try common variations
-  let theraSheet = ss.getSheetByName('Base_Terapeutica') 
-                || ss.getSheetByName('Base Terapeutica') 
-                || ss.getSheetByName('Base_Terapéutica')
-                || ss.getSheetByName('Base Terapéutica');
+  // Get Therapeutic Base from Programas_criterios
+  let theraSheet = ss.getSheetByName('Programas_criterios');
   
   let therapeutic = [];
   if (theraSheet && theraSheet.getLastRow() > 1) {
-    // Get Cols A & B (Programa, OCP)
-    const theraData = theraSheet.getRange(2, 1, theraSheet.getLastRow() - 1, 2).getValues();
-    therapeutic = theraData.map(row => ({
-      programa: row[0],
-      ocp: row[1] || ''
-    })).filter(item => item.programa);
+    const theraData = theraSheet.getDataRange().getValues();
+    // Start from row 1 (assuming row 0 is header)
+    for (let i = 1; i < theraData.length; i++) {
+        let row = theraData[i];
+        let programa = row[0];
+        if (!programa) continue;
+        
+        let criterios = [];
+        for (let j = 1; j < row.length; j++) {
+            if (row[j]) {
+                // split by newline or semicolon if multiple values in a cell
+                let cellData = String(row[j]).split(/[\n;]/).map(s => s.trim()).filter(s => s);
+                criterios.push(...cellData);
+            }
+        }
+        
+        let existing = therapeutic.find(t => t.programa === programa);
+        if (existing) {
+            existing.criterios.push(...criterios);
+            existing.criterios = [...new Set(existing.criterios)];
+        } else {
+            therapeutic.push({
+                programa: programa,
+                criterios: [...new Set(criterios)]
+            });
+        }
+    }
   }
 
   return {
@@ -281,22 +299,19 @@ function saveRecommendation(student, recommendation, supervisor) {
  */
 function addNewTherapeuticProgram(programName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById('1hya8pmWDqWDmciTxn0XPskILffKvxB8pwwV6izA10Ro');
-  let theraSheet = ss.getSheetByName('Base_Terapeutica') 
-                || ss.getSheetByName('Base Terapeutica') 
-                || ss.getSheetByName('Base_Terapéutica')
-                || ss.getSheetByName('Base Terapéutica');
+  let theraSheet = ss.getSheetByName('Programas_criterios');
   
   if (!theraSheet) {
-    theraSheet = ss.insertSheet('Base_Terapeutica');
-    theraSheet.appendRow(['Programa', 'OCP']);
+    theraSheet = ss.insertSheet('Programas_criterios');
+    theraSheet.appendRow(['Programa', 'Criterio']);
   }
   
   const data = theraSheet.getDataRange().getValues();
   // Verificar si ya existe
-  const exists = data.some(row => row[0].toString().trim().toLowerCase() === programName.trim().toLowerCase());
+  const exists = data.some(row => row[0] && row[0].toString().trim().toLowerCase() === programName.trim().toLowerCase());
   
   if (!exists) {
-    theraSheet.appendRow([programName, '-']);
+    theraSheet.appendRow([programName, '']);
     return { success: true, message: 'Programa "' + programName + '" añadido correctamente.' };
   } else {
     return { success: true, message: 'El programa "' + programName + '" ya existe.' };
