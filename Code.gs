@@ -100,41 +100,51 @@ function getData() {
     }));
   }
 
-  // Get Therapeutic Base from Programas_criterios (try case-insensitive)
+  // --- LEER DE: Programas_criterios ---
+  // Generamos tanto el formato V1 (plano, para la app antigua) como el V2 (agrupado, para la app nueva)
   const allSheets = ss.getSheets();
-  let theraSheet = allSheets.find(s => s.getName().toLowerCase() === 'programas_criterios');
-  
-  // Backwards compatibility or alternative names
-  if (!theraSheet) {
-    theraSheet = allSheets.find(s => s.getName().toLowerCase() === 'base_terapeutica' || s.getName().toLowerCase() === 'base terapeutica');
-  }
+  let theraSheetNew = allSheets.find(s => s.getName().toLowerCase() === 'programas_criterios');
   
   let therapeutic = [];
-  if (theraSheet && theraSheet.getLastRow() > 1) {
-    const theraData = theraSheet.getDataRange().getValues();
-    // Start from row 1 (assuming row 0 is header)
+  let therapeuticV2 = [];
+  
+  if (theraSheetNew && theraSheetNew.getLastRow() > 1) {
+    const theraData = theraSheetNew.getDataRange().getValues();
     for (let i = 1; i < theraData.length; i++) {
         let row = theraData[i];
         let programa = row[0];
         if (!programa) continue;
         
+        // Recopila los criterios de las columnas B en adelante y hace split por saltos de linea
         let criterios = [];
         for (let j = 1; j < row.length; j++) {
             if (row[j]) {
-                // split by newline or semicolon if multiple values in a cell
                 let cellData = String(row[j]).split(/[\n;]/).map(s => s.trim()).filter(s => s);
                 criterios.push(...cellData);
             }
         }
         
-        let existing = therapeutic.find(t => t.programa === programa);
+        // --- 1. Formato V2 (Agrupado) ---
+        let existing = therapeuticV2.find(t => t.programa === programa);
         if (existing) {
             existing.criterios.push(...criterios);
             existing.criterios = [...new Set(existing.criterios)];
         } else {
-            therapeutic.push({
+            therapeuticV2.push({
                 programa: programa,
                 criterios: [...new Set(criterios)]
+            });
+        }
+
+        // --- 2. Formato V1 (Plano para app antigua) ---
+        if (criterios.length === 0) {
+            therapeutic.push({ programa: programa, ocp: '-' });
+        } else {
+            criterios.forEach(c => {
+                // Comprobamos que no esté duplicado exactamente igual en el plano
+                if (!therapeutic.some(t => t.programa === programa && t.ocp === c)) {
+                    therapeutic.push({ programa: programa, ocp: c });
+                }
             });
         }
     }
@@ -143,7 +153,8 @@ function getData() {
   return {
     students: students,
     educational: educational,
-    therapeutic: therapeutic
+    therapeutic: therapeutic,    // Lo que usa la app antigua
+    therapeuticV2: therapeuticV2 // Lo que usa esta app renovada
   };
 }
 
@@ -305,19 +316,18 @@ function saveRecommendation(student, recommendation, supervisor) {
  */
 function addNewTherapeuticProgram(programName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById('1hya8pmWDqWDmciTxn0XPskILffKvxB8pwwV6izA10Ro');
-  let theraSheet = ss.getSheetByName('Programas_criterios');
   
-  if (!theraSheet) {
-    theraSheet = ss.insertSheet('Programas_criterios');
-    theraSheet.appendRow(['Programa', 'Criterio']);
+  // Guardar en la nueva hoja 'Programas_criterios'
+  let theraSheetNew = ss.getSheetByName('Programas_criterios');
+  if (!theraSheetNew) {
+    theraSheetNew = ss.insertSheet('Programas_criterios');
+    theraSheetNew.appendRow(['Programa', 'Criterio']);
   }
+  const dataNew = theraSheetNew.getDataRange().getValues();
+  const existsNew = dataNew.some(row => row[0] && row[0].toString().trim().toLowerCase() === programName.trim().toLowerCase());
   
-  const data = theraSheet.getDataRange().getValues();
-  // Verificar si ya existe
-  const exists = data.some(row => row[0] && row[0].toString().trim().toLowerCase() === programName.trim().toLowerCase());
-  
-  if (!exists) {
-    theraSheet.appendRow([programName, '']);
+  if (!existsNew) {
+    theraSheetNew.appendRow([programName, '']);
     return { success: true, message: 'Programa "' + programName + '" añadido correctamente.' };
   } else {
     return { success: true, message: 'El programa "' + programName + '" ya existe.' };

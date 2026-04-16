@@ -913,7 +913,7 @@
         function populateFields(data) {
             studentsList = data.students || [];
             educationalBase = data.educational || [];
-            therapeuticBase = data.therapeutic || [];
+            therapeuticBase = data.therapeuticV2 || data.therapeutic || [];
             console.log("Therapeutic Base Received:", therapeuticBase);
             const contentsList = data.contents || [];
 
