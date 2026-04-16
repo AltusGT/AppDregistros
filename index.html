@@ -1083,20 +1083,19 @@
             ocpSelect.classList.remove('opacity-50', 'border-dashed');
 
             const targetProgram = program.toLowerCase();
-            const progData = therapeuticBase.find(t => {
+            const matches = therapeuticBase.filter(t => {
                 const p = (t.programa || t.Programa || t).toString().trim().toLowerCase();
                 return p === targetProgram;
             });
 
-            if (progData && progData.criterios && Array.isArray(progData.criterios)) {
-                progData.criterios.forEach(c => {
-                    const opt = new Option(c, c);
-                    ocpSelect.add(opt);
+            if (matches.length > 0) {
+                matches.forEach(m => {
+                    const ocpVal = m.ocp || m.OCP;
+                    if (ocpVal && ocpVal !== '-') {
+                        const opt = new Option(ocpVal, ocpVal);
+                        ocpSelect.add(opt);
+                    }
                 });
-            } else if (progData && (progData.ocp || progData.OCP)) {
-                // Fallback por si la estructura es la antigua
-                const val = progData.ocp || progData.OCP;
-                ocpSelect.add(new Option(val, val));
             }
 
             // Añadir opción manual de OCP

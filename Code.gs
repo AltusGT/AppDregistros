@@ -100,39 +100,24 @@ function getData() {
     }));
   }
 
-  // --- LEER DE: Programas_criterios ---
-  const allSheets = ss.getSheets();
-  let theraSheetNew = allSheets.find(s => s.getName().toLowerCase() === 'programas_criterios');
-  
+  // 2. Base Terapéutica (Catálogo)
+  const catSheet = ss.getSheetByName('Programas_criterios');
   let therapeutic = [];
-  
-  if (theraSheetNew && theraSheetNew.getLastRow() > 1) {
-    const theraData = theraSheetNew.getDataRange().getValues();
-    for (let i = 1; i < theraData.length; i++) {
-        let row = theraData[i];
-        let programa = row[0];
-        if (!programa) continue;
-        
-        let criterios = [];
-        for (let j = 1; j < row.length; j++) {
-            if (row[j]) {
-                let cellData = String(row[j]).split(/[\n;]/).map(s => s.trim()).filter(s => s);
-                criterios.push(...cellData);
-            }
-        }
-        
-        // Estructura V2 guardada directamente en "therapeutic" (como esperaba la otra app desde ayer)
-        let existing = therapeutic.find(t => t.programa === programa);
-        if (existing) {
-            existing.criterios.push(...criterios);
-            existing.criterios = [...new Set(existing.criterios)];
-        } else {
-            therapeutic.push({
-                programa: programa,
-                criterios: [...new Set(criterios)]
-            });
-        }
-    }
+  if (catSheet && catSheet.getLastRow() > 1) {
+    // Lee hasta la última columna para asegurar que obtiene todos los criterios separados por saltos de línea
+    const catData = catSheet.getRange(2, 1, catSheet.getLastRow() - 1, 2).getValues();
+    catData.forEach(row => {
+      // row[0] es el nombre del programa, row[1] son los criterios separados por salto de línea
+      const programa = row[0];
+      if (programa) {
+          const criterios = String(row[1]).split('\n').filter(String);
+          if (criterios.length === 0) {
+              therapeutic.push({ programa: programa, ocp: '-' });
+          } else {
+              criterios.forEach(c => { therapeutic.push({ programa: programa, ocp: c.trim() }); });
+          }
+      }
+    });
   }
 
   return {
