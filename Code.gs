@@ -100,8 +100,14 @@ function getData() {
     }));
   }
 
-  // Get Therapeutic Base from Programas_criterios
-  let theraSheet = ss.getSheetByName('Programas_criterios');
+  // Get Therapeutic Base from Programas_criterios (try case-insensitive)
+  const allSheets = ss.getSheets();
+  let theraSheet = allSheets.find(s => s.getName().toLowerCase() === 'programas_criterios');
+  
+  // Backwards compatibility or alternative names
+  if (!theraSheet) {
+    theraSheet = allSheets.find(s => s.getName().toLowerCase() === 'base_terapeutica' || s.getName().toLowerCase() === 'base terapeutica');
+  }
   
   let therapeutic = [];
   if (theraSheet && theraSheet.getLastRow() > 1) {

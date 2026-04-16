@@ -914,6 +914,7 @@
             studentsList = data.students || [];
             educationalBase = data.educational || [];
             therapeuticBase = data.therapeutic || [];
+            console.log("Therapeutic Base Received:", therapeuticBase);
             const contentsList = data.contents || [];
 
             const studentSelect = document.getElementById('estudiante');
@@ -942,8 +943,8 @@
             dashProg.innerHTML = '<option value="">Todos</option>';
             const allPrograms = new Set([...educationalBase.map(e => e.materia), ...therapeuticBase.map(t => typeof t === 'object' ? (t.Programa || t.programa) : t)]);
             [...allPrograms].sort().forEach(p => dashProg.add(new Option(p, p)));
-            // Also load therapeutic programs for the registration form
-            loadTherapeuticPrograms();
+            // Also load therapeutic programs for the registration form (force reload)
+            loadTherapeuticPrograms(true);
         }
 
         function setupListeners() {
@@ -1007,15 +1008,21 @@
             });
         }
 
-        function loadTherapeuticPrograms() {
+        function loadTherapeuticPrograms(force = false) {
             const select = document.getElementById('programa-terapeutico');
             if (!select) return;
             
-            // Keep the first option
+            // Si ya tiene más de 2 opciones, no recargar a menos que se fuerce
+            if (select.options.length > 2 && !force) return;
+
+            // Limpiar pero mantener la primera
             select.innerHTML = '<option value="">Seleccione programa...</option>';
 
-            // Get unique programs
-            const programs = [...new Set(therapeuticBase.map(t => typeof t === 'object' ? (t.Programa || t.programa) : t).filter(Boolean))].sort();
+            // Obtener programas únicos del listado mapeado
+            const programs = [...new Set(therapeuticBase.map(t => {
+                if (typeof t === 'object') return t.programa || t.Programa;
+                return t;
+            }).filter(Boolean))].sort();
             
             programs.forEach(p => {
                 const opt = document.createElement('option');
@@ -1024,15 +1031,13 @@
                 select.appendChild(opt);
             });
 
-            // Add manual entry option at the end
+            // Añadir opción manual al final
             const manualOpt = document.createElement('option');
             manualOpt.value = "MANUAL";
             manualOpt.textContent = "➕ [ Otro / Escribir manualmente ]";
             manualOpt.style.color = "var(--primary)";
             manualOpt.style.fontWeight = "bold";
             select.appendChild(manualOpt);
-
-            console.log("Therapeutic programs loaded into select:", programs.length);
         }
 
         function updateOCPTerapeutico() {
@@ -1052,9 +1057,11 @@
                 }).then((result) => {
                     if (result.isConfirmed && result.value) {
                         const newName = result.value.trim();
-                        // Add temporarily to the select
+                        // Añadir temporalmente al select
                         const newOpt = new Option(newName, newName, true, true);
                         select.add(newOpt, select.options[select.options.length - 1]);
+                        // Registrar en la base local para que no se pierda al elegir OCP
+                        therapeuticBase.push({ programa: newName, criterios: [] });
                         updateOCPTerapeutico();
                     } else {
                         select.value = "";
@@ -1064,7 +1071,7 @@
                 return;
             }
 
-            ocpSelect.innerHTML = '<option value="">Seleccione OCP...</option>';
+            ocpSelect.innerHTML = '<option value="">Seleccione OCP / Criterio...</option>';
 
             if (!program) {
                 ocpSelect.disabled = true;
@@ -1076,27 +1083,27 @@
             ocpSelect.classList.remove('opacity-50', 'border-dashed');
 
             const targetProgram = program.toLowerCase();
-            const matches = therapeuticBase.filter(t => {
-                const p = (typeof t === 'object' ? (t.Programa || t.programa) : t).trim().toLowerCase();
+            const progData = therapeuticBase.find(t => {
+                const p = (t.programa || t.Programa || t).toString().trim().toLowerCase();
                 return p === targetProgram;
             });
 
-            if (matches.length > 0) {
-                matches.forEach(m => {
-                    const ocpVal = typeof m === 'object' ? (m.OCP || m.ocp) : null;
-                    if (ocpVal) {
-                        const opt = new Option(ocpVal, ocpVal);
-                        ocpSelect.add(opt);
-                    }
+            if (progData && progData.criterios && Array.isArray(progData.criterios)) {
+                progData.criterios.forEach(c => {
+                    const opt = new Option(c, c);
+                    ocpSelect.add(opt);
                 });
+            } else if (progData && (progData.ocp || progData.OCP)) {
+                // Fallback por si la estructura es la antigua
+                const val = progData.ocp || progData.OCP;
+                ocpSelect.add(new Option(val, val));
             }
 
-            // Add manual OCP option
+            // Añadir opción manual de OCP
             const manualOcp = new Option("➕ [ Escribir otro criterio... ]", "MANUAL");
             manualOcp.style.color = "var(--primary)";
             ocpSelect.add(manualOcp);
             
-            // Listener for Manual OCP
             ocpSelect.onchange = () => {
                 if (ocpSelect.value === "MANUAL") {
                     Swal.fire({
