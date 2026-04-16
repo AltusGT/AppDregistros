@@ -101,12 +101,10 @@ function getData() {
   }
 
   // --- LEER DE: Programas_criterios ---
-  // Generamos tanto el formato V1 (plano, para la app antigua) como el V2 (agrupado, para la app nueva)
   const allSheets = ss.getSheets();
   let theraSheetNew = allSheets.find(s => s.getName().toLowerCase() === 'programas_criterios');
   
   let therapeutic = [];
-  let therapeuticV2 = [];
   
   if (theraSheetNew && theraSheetNew.getLastRow() > 1) {
     const theraData = theraSheetNew.getDataRange().getValues();
@@ -115,7 +113,6 @@ function getData() {
         let programa = row[0];
         if (!programa) continue;
         
-        // Recopila los criterios de las columnas B en adelante y hace split por saltos de linea
         let criterios = [];
         for (let j = 1; j < row.length; j++) {
             if (row[j]) {
@@ -124,27 +121,15 @@ function getData() {
             }
         }
         
-        // --- 1. Formato V2 (Agrupado) ---
-        let existing = therapeuticV2.find(t => t.programa === programa);
+        // Estructura V2 guardada directamente en "therapeutic" (como esperaba la otra app desde ayer)
+        let existing = therapeutic.find(t => t.programa === programa);
         if (existing) {
             existing.criterios.push(...criterios);
             existing.criterios = [...new Set(existing.criterios)];
         } else {
-            therapeuticV2.push({
+            therapeutic.push({
                 programa: programa,
                 criterios: [...new Set(criterios)]
-            });
-        }
-
-        // --- 2. Formato V1 (Plano para app antigua) ---
-        if (criterios.length === 0) {
-            therapeutic.push({ programa: programa, ocp: '-' });
-        } else {
-            criterios.forEach(c => {
-                // Comprobamos que no esté duplicado exactamente igual en el plano
-                if (!therapeutic.some(t => t.programa === programa && t.ocp === c)) {
-                    therapeutic.push({ programa: programa, ocp: c });
-                }
             });
         }
     }
@@ -153,8 +138,7 @@ function getData() {
   return {
     students: students,
     educational: educational,
-    therapeutic: therapeutic,    // Lo que usa la app antigua
-    therapeuticV2: therapeuticV2 // Lo que usa esta app renovada
+    therapeutic: therapeutic
   };
 }
 

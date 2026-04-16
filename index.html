@@ -21,7 +21,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQqFTFFUGkU10cUC9vXBlnq7xQ2FvyKZVE4TdNcGMIbpIpE8mL527NV34f-VlYgfwEDQ/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyosai2VPsLHnToT0qQbifuzPBsJ5OuzjbkN6_ZyoVrMt7Z7VMGoQsvWV4gk9cZgCjkvg/exec";
 
         tailwind.config = {
             theme: {
@@ -913,7 +913,7 @@
         function populateFields(data) {
             studentsList = data.students || [];
             educationalBase = data.educational || [];
-            therapeuticBase = data.therapeuticV2 || data.therapeutic || [];
+            therapeuticBase = data.therapeutic || [];
             console.log("Therapeutic Base Received:", therapeuticBase);
             const contentsList = data.contents || [];
 
